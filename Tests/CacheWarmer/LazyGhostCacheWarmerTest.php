@@ -11,13 +11,14 @@
 
 namespace Symfony\Component\JsonStreamer\Tests\CacheWarmer;
 
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\JsonStreamer\CacheWarmer\LazyGhostCacheWarmer;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\ClassicDummy;
 
-/**
- * @group legacy
- */
+#[IgnoreDeprecations]
+#[Group('legacy')]
 class LazyGhostCacheWarmerTest extends TestCase
 {
     private string $lazyGhostsDir;
