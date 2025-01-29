@@ -123,7 +123,7 @@ final class StreamReaderGenerator
             $className = $type->getClassName();
 
             if ($context['generated_classes'][$typeString] ??= false) {
-                return ObjectNode::createGhost($type);
+                return ObjectNode::createMock($type);
             }
 
             $propertiesNodes = [];
