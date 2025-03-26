@@ -25,10 +25,8 @@ use Symfony\Component\JsonStreamer\DataModel\Write\BackedEnumNode;
 use Symfony\Component\JsonStreamer\DataModel\Write\CollectionNode;
 use Symfony\Component\JsonStreamer\DataModel\Write\CompositeNode;
 use Symfony\Component\JsonStreamer\DataModel\Write\DataModelNodeInterface;
-use Symfony\Component\JsonStreamer\DataModel\Write\ExceptionNode;
 use Symfony\Component\JsonStreamer\DataModel\Write\ObjectNode;
 use Symfony\Component\JsonStreamer\DataModel\Write\ScalarNode;
-use Symfony\Component\JsonStreamer\Exception\MaxDepthException;
 use Symfony\Component\JsonStreamer\Exception\RuntimeException;
 use Symfony\Component\JsonStreamer\Exception\UnsupportedException;
 use Symfony\Component\JsonStreamer\Mapping\PropertyMetadataLoaderInterface;
@@ -49,8 +47,6 @@ use Symfony\Component\TypeInfo\Type\UnionType;
  */
 final class StreamWriterGenerator
 {
-    private const MAX_DEPTH = 512;
-
     private ?PhpAstBuilder $phpAstBuilder = null;
     private ?PhpOptimizer $phpOptimizer = null;
     private ?PrettyPrinter $phpPrinter = null;
@@ -114,12 +110,6 @@ final class StreamWriterGenerator
      */
     private function createDataModel(Type $type, DataAccessorInterface $accessor, array $options = [], array $context = []): DataModelNodeInterface
     {
-        $context['depth'] ??= 0;
-
-        if ($context['depth'] > self::MAX_DEPTH) {
-            return new ExceptionNode(MaxDepthException::class);
-        }
-
         $context['original_type'] ??= $type;
 
         if ($type instanceof UnionType) {
@@ -135,9 +125,14 @@ final class StreamWriterGenerator
         }
 
         if ($type instanceof ObjectType && !$type instanceof EnumType) {
-            ++$context['depth'];
-
+            $typeString = (string) $type;
             $className = $type->getClassName();
+
+            if ($context['generated_classes'][$typeString] ??= false) {
+                return ObjectNode::createMock($accessor, $type);
+            }
+
+            $context['generated_classes'][$typeString] = true;
             $propertiesMetadata = $this->propertyMetadataLoader->load($className, $options, ['original_type' => $type] + $context);
 
             try {
@@ -180,8 +175,6 @@ final class StreamWriterGenerator
         }
 
         if ($type instanceof CollectionType) {
-            ++$context['depth'];
-
             return new CollectionNode(
                 $accessor,
                 $type,

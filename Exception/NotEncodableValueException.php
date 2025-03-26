@@ -16,10 +16,6 @@ namespace Symfony\Component\JsonStreamer\Exception;
  *
  * @experimental
  */
-final class MaxDepthException extends RuntimeException
+class NotEncodableValueException extends UnexpectedValueException
 {
-    public function __construct()
-    {
-        parent::__construct('Max depth of 512 has been reached.');
-    }
 }
