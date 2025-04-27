@@ -35,6 +35,7 @@ use Symfony\Component\TypeInfo\Type\BackedEnumType;
 use Symfony\Component\TypeInfo\Type\BuiltinType;
 use Symfony\Component\TypeInfo\Type\CollectionType;
 use Symfony\Component\TypeInfo\Type\EnumType;
+use Symfony\Component\TypeInfo\Type\GenericType;
 use Symfony\Component\TypeInfo\Type\ObjectType;
 use Symfony\Component\TypeInfo\Type\UnionType;
 
@@ -124,6 +125,10 @@ final class StreamWriterGenerator
             return new BackedEnumNode($accessor, $type);
         }
 
+        if ($type instanceof GenericType) {
+            $type = $type->getWrappedType();
+        }
+
         if ($type instanceof ObjectType && !$type instanceof EnumType) {
             $typeString = (string) $type;
             $className = $type->getClassName();
@@ -133,7 +138,7 @@ final class StreamWriterGenerator
             }
 
             $context['generated_classes'][$typeString] = true;
-            $propertiesMetadata = $this->propertyMetadataLoader->load($className, $options, ['original_type' => $type] + $context);
+            $propertiesMetadata = $this->propertyMetadataLoader->load($className, $options, $context);
 
             try {
                 $classReflection = new \ReflectionClass($className);

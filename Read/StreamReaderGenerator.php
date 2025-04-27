@@ -34,6 +34,7 @@ use Symfony\Component\TypeInfo\Type\BackedEnumType;
 use Symfony\Component\TypeInfo\Type\BuiltinType;
 use Symfony\Component\TypeInfo\Type\CollectionType;
 use Symfony\Component\TypeInfo\Type\EnumType;
+use Symfony\Component\TypeInfo\Type\GenericType;
 use Symfony\Component\TypeInfo\Type\ObjectType;
 use Symfony\Component\TypeInfo\Type\UnionType;
 
@@ -116,6 +117,10 @@ final class StreamReaderGenerator
 
         if ($type instanceof BackedEnumType) {
             return new BackedEnumNode($type);
+        }
+
+        if ($type instanceof GenericType) {
+            $type = $type->getWrappedType();
         }
 
         if ($type instanceof ObjectType && !$type instanceof EnumType) {

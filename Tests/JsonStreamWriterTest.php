@@ -17,6 +17,7 @@ use Symfony\Component\JsonStreamer\JsonStreamWriter;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Enum\DummyBackedEnum;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\ClassicDummy;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithDateTimes;
+use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithGenerics;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithNameAttributes;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithNullableProperties;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithPhpDoc;
@@ -115,6 +116,18 @@ class JsonStreamWriterTest extends TestCase
         $dummy->name = 'dummy name';
 
         $this->assertWritten('{"id":10,"name":"dummy name"}', $dummy, Type::object(ClassicDummy::class));
+    }
+
+    public function testWriteObjectWithGenerics()
+    {
+        $nestedDummy = new DummyWithNameAttributes();
+        $nestedDummy->id = 10;
+        $nestedDummy->name = 'dummy name';
+
+        $dummy = new DummyWithGenerics();
+        $dummy->dummies = [$nestedDummy];
+
+        $this->assertWritten('{"dummies":[{"id":10,"name":"dummy name"}]}', $dummy, Type::generic(Type::object(DummyWithGenerics::class), Type::object(ClassicDummy::class)));
     }
 
     public function testWriteObjectWithStreamedName()
