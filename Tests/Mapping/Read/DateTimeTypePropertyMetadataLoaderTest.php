@@ -47,6 +47,18 @@ class DateTimeTypePropertyMetadataLoaderTest extends TestCase
         $loader->load(self::class);
     }
 
+    public function testThrowWhenDateTimeSubclassType()
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('The "DateTime" class is not supported. Use "DateTimeImmutable" instead.');
+
+        $loader = new DateTimeTypePropertyMetadataLoader(self::propertyMetadataLoader([
+            'mutable' => new PropertyMetadata('mutable', Type::object(DateTimeChild::class)),
+        ]));
+
+        $loader->load(self::class);
+    }
+
     /**
      * @param array<string, PropertyMetadata> $propertiesMetadata
      */
@@ -63,4 +75,8 @@ class DateTimeTypePropertyMetadataLoaderTest extends TestCase
             }
         };
     }
+}
+
+class DateTimeChild extends \DateTime
+{
 }

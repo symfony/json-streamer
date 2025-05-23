@@ -38,7 +38,7 @@ final class DateTimeTypePropertyMetadataLoader implements PropertyMetadataLoader
             $type = $metadata->getType();
 
             if ($type instanceof ObjectType && is_a($type->getClassName(), \DateTimeInterface::class, true)) {
-                if (\DateTime::class === $type->getClassName()) {
+                if (is_a($type->getClassName(), \DateTime::class, true)) {
                     throw new InvalidArgumentException('The "DateTime" class is not supported. Use "DateTimeImmutable" instead.');
                 }
 
