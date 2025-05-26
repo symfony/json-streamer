@@ -11,16 +11,8 @@
 
 namespace Symfony\Component\JsonStreamer\Write;
 
-use PhpParser\PhpVersion;
-use PhpParser\PrettyPrinter;
-use PhpParser\PrettyPrinter\Standard;
 use Symfony\Component\Filesystem\Exception\IOException;
 use Symfony\Component\Filesystem\Filesystem;
-use Symfony\Component\JsonStreamer\DataModel\DataAccessorInterface;
-use Symfony\Component\JsonStreamer\DataModel\FunctionDataAccessor;
-use Symfony\Component\JsonStreamer\DataModel\PropertyDataAccessor;
-use Symfony\Component\JsonStreamer\DataModel\ScalarDataAccessor;
-use Symfony\Component\JsonStreamer\DataModel\VariableDataAccessor;
 use Symfony\Component\JsonStreamer\DataModel\Write\BackedEnumNode;
 use Symfony\Component\JsonStreamer\DataModel\Write\CollectionNode;
 use Symfony\Component\JsonStreamer\DataModel\Write\CompositeNode;
@@ -48,9 +40,7 @@ use Symfony\Component\TypeInfo\Type\UnionType;
  */
 final class StreamWriterGenerator
 {
-    private ?PhpAstBuilder $phpAstBuilder = null;
-    private ?PhpOptimizer $phpOptimizer = null;
-    private ?PrettyPrinter $phpPrinter = null;
+    private ?PhpGenerator $phpGenerator = null;
     private ?Filesystem $fs = null;
 
     public function __construct(
@@ -71,17 +61,11 @@ final class StreamWriterGenerator
             return $path;
         }
 
-        $this->phpAstBuilder ??= new PhpAstBuilder();
-        $this->phpOptimizer ??= new PhpOptimizer();
-        $this->phpPrinter ??= new Standard(['phpVersion' => PhpVersion::fromComponents(8, 2)]);
+        $this->phpGenerator ??= new PhpGenerator();
         $this->fs ??= new Filesystem();
 
-        $dataModel = $this->createDataModel($type, new VariableDataAccessor('data'), $options);
-
-        $nodes = $this->phpAstBuilder->build($dataModel, $options);
-        $nodes = $this->phpOptimizer->optimize($nodes);
-
-        $content = $this->phpPrinter->prettyPrintFile($nodes)."\n";
+        $dataModel = $this->createDataModel($type, '$data', $options);
+        $php = $this->phpGenerator->generate($dataModel, $options);
 
         if (!$this->fs->exists($this->streamWritersDir)) {
             $this->fs->mkdir($this->streamWritersDir);
@@ -90,7 +74,7 @@ final class StreamWriterGenerator
         $tmpFile = $this->fs->tempnam(\dirname($path), basename($path));
 
         try {
-            $this->fs->dumpFile($tmpFile, $content);
+            $this->fs->dumpFile($tmpFile, $php);
             $this->fs->rename($tmpFile, $path);
             $this->fs->chmod($path, 0666 & ~umask());
         } catch (IOException $e) {
@@ -109,7 +93,7 @@ final class StreamWriterGenerator
      * @param array<string, mixed> $options
      * @param array<string, mixed> $context
      */
-    private function createDataModel(Type $type, DataAccessorInterface $accessor, array $options = [], array $context = []): DataModelNodeInterface
+    private function createDataModel(Type $type, string $accessor, array $options = [], array $context = []): DataModelNodeInterface
     {
         $context['original_type'] ??= $type;
 
@@ -149,12 +133,12 @@ final class StreamWriterGenerator
             $propertiesNodes = [];
 
             foreach ($propertiesMetadata as $streamedName => $propertyMetadata) {
-                $propertyAccessor = new PropertyDataAccessor($accessor, $propertyMetadata->getName());
+                $propertyAccessor = $accessor.'->'.$propertyMetadata->getName();
 
                 foreach ($propertyMetadata->getNativeToStreamValueTransformer() as $valueTransformer) {
                     if (\is_string($valueTransformer)) {
-                        $valueTransformerServiceAccessor = new FunctionDataAccessor('get', [new ScalarDataAccessor($valueTransformer)], new VariableDataAccessor('valueTransformers'));
-                        $propertyAccessor = new FunctionDataAccessor('transform', [$propertyAccessor, new VariableDataAccessor('options')], $valueTransformerServiceAccessor);
+                        $valueTransformerServiceAccessor = "\$valueTransformers->get('$valueTransformer')";
+                        $propertyAccessor = "{$valueTransformerServiceAccessor}->transform($propertyAccessor, \$options)";
 
                         continue;
                     }
@@ -168,9 +152,9 @@ final class StreamWriterGenerator
                     $functionName = !$functionReflection->getClosureCalledClass()
                         ? $functionReflection->getName()
                         : \sprintf('%s::%s', $functionReflection->getClosureCalledClass()->getName(), $functionReflection->getName());
-                    $arguments = $functionReflection->isUserDefined() ? [$propertyAccessor, new VariableDataAccessor('options')] : [$propertyAccessor];
+                    $arguments = $functionReflection->isUserDefined() ? "$propertyAccessor, \$options" : $propertyAccessor;
 
-                    $propertyAccessor = new FunctionDataAccessor($functionName, $arguments);
+                    $propertyAccessor = "$functionName($arguments)";
                 }
 
                 $propertiesNodes[$streamedName] = $this->createDataModel($propertyMetadata->getType(), $propertyAccessor, $options, $context);
@@ -183,7 +167,7 @@ final class StreamWriterGenerator
             return new CollectionNode(
                 $accessor,
                 $type,
-                $this->createDataModel($type->getCollectionValueType(), new VariableDataAccessor('value'), $options, $context),
+                $this->createDataModel($type->getCollectionValueType(), '$value', $options, $context),
             );
         }
 
