@@ -47,10 +47,5 @@ class StreamablePass implements CompilerPassInterface
 
         $container->getDefinition('.json_streamer.cache_warmer.streamer')
             ->replaceArgument(0, $streamable);
-
-        if ($container->hasDefinition('.json_streamer.cache_warmer.lazy_ghost')) {
-            $container->getDefinition('.json_streamer.cache_warmer.lazy_ghost')
-                ->replaceArgument(0, array_keys($streamable));
-        }
     }
 }

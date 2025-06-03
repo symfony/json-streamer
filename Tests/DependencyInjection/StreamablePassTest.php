@@ -23,7 +23,6 @@ class StreamablePassTest extends TestCase
 
         $container->register('json_streamer.stream_writer');
         $container->register('.json_streamer.cache_warmer.streamer')->setArguments([null]);
-        $container->register('.json_streamer.cache_warmer.lazy_ghost')->setArguments([null]);
 
         $container->register('streamable')->setClass('Foo')->addTag('json_streamer.streamable', ['object' => true, 'list' => true]);
         $container->register('abstractStreamable')->setClass('Bar')->addTag('json_streamer.streamable', ['object' => true, 'list' => true])->setAbstract(true);
@@ -33,9 +32,7 @@ class StreamablePassTest extends TestCase
         $pass->process($container);
 
         $streamerCacheWarmer = $container->getDefinition('.json_streamer.cache_warmer.streamer');
-        $lazyGhostCacheWarmer = $container->getDefinition('.json_streamer.cache_warmer.lazy_ghost');
 
         $this->assertSame(['Foo' => ['object' => true, 'list' => true]], $streamerCacheWarmer->getArgument(0));
-        $this->assertSame(['Foo'], $lazyGhostCacheWarmer->getArgument(0));
     }
 }
