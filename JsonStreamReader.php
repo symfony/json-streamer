@@ -45,7 +45,7 @@ final class JsonStreamReader implements StreamReaderInterface
         private ContainerInterface $valueTransformers,
         PropertyMetadataLoaderInterface $propertyMetadataLoader,
         string $streamReadersDir,
-        string $lazyGhostsDir,
+        ?string $lazyGhostsDir = null,
     ) {
         $this->streamReaderGenerator = new StreamReaderGenerator($propertyMetadataLoader, $streamReadersDir);
         $this->instantiator = new Instantiator();
