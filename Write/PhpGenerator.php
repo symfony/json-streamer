@@ -61,6 +61,9 @@ final class PhpGenerator
 
         return $this->line('<?php', $context)
             .$this->line('', $context)
+            .$this->line('/**', $context)
+            .$this->line(' * @param '.$dataModel->getType().' $data', $context)
+            .$this->line(' */', $context)
             .$this->line('return static function (mixed $data, \\'.ContainerInterface::class.' $valueTransformers, array $options): \\Traversable {', $context)
             .implode('', $generators)
             .$this->line('    try {', $context)

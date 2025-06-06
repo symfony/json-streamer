@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * @param Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithNameAttributes|array<int,Symfony\Component\JsonStreamer\Tests\Fixtures\Enum\DummyBackedEnum>|int $data
+ */
 return static function (mixed $data, \Psr\Container\ContainerInterface $valueTransformers, array $options): \Traversable {
     try {
         if (\is_array($data)) {

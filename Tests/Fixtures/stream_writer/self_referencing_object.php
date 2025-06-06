@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * @param Symfony\Component\JsonStreamer\Tests\Fixtures\Model\SelfReferencingDummy $data
+ */
 return static function (mixed $data, \Psr\Container\ContainerInterface $valueTransformers, array $options): \Traversable {
     $generators['Symfony\Component\JsonStreamer\Tests\Fixtures\Model\SelfReferencingDummy'] = static function ($data, $depth) use ($valueTransformers, $options, &$generators) {
         if ($depth >= 512) {
