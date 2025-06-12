@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * @param Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithValueTransformerAttributes $data
+ */
 return static function (mixed $data, \Psr\Container\ContainerInterface $valueTransformers, array $options): \Traversable {
     try {
         yield '{"id":';

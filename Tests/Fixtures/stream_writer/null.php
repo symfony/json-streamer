@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * @param null $data
+ */
 return static function (mixed $data, \Psr\Container\ContainerInterface $valueTransformers, array $options): \Traversable {
     try {
         yield 'null';

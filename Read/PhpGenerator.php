@@ -51,6 +51,9 @@ final class PhpGenerator
         if ($decodeFromStream) {
             return $this->line('<?php', $context)
                 .$this->line('', $context)
+                .$this->line('/**', $context)
+                .$this->line(' * @return '.$dataModel->getType(), $context)
+                .$this->line(' */', $context)
                 .$this->line('return static function (mixed $stream, \\'.ContainerInterface::class.' $valueTransformers, \\'.LazyInstantiator::class.' $instantiator, array $options): mixed {', $context)
                 .$providers
                 .($this->canBeDecodedWithJsonDecode($dataModel, $decodeFromStream)
@@ -61,6 +64,9 @@ final class PhpGenerator
 
         return $this->line('<?php', $context)
             .$this->line('', $context)
+            .$this->line('/**', $context)
+            .$this->line(' * @return '.$dataModel->getType(), $context)
+            .$this->line(' */', $context)
             .$this->line('return static function (string|\\Stringable $string, \\'.ContainerInterface::class.' $valueTransformers, \\'.Instantiator::class.' $instantiator, array $options): mixed {', $context)
             .$providers
             .($this->canBeDecodedWithJsonDecode($dataModel, $decodeFromStream)
