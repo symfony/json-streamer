@@ -190,6 +190,42 @@ class JsonStreamWriterTest extends TestCase
         );
     }
 
+    public function testValueTransformerHasAccessToCurrentObject()
+    {
+        $dummy = new DummyWithValueTransformerAttributes();
+        $dummy->id = 10;
+        $dummy->active = true;
+
+        $this->assertWritten(
+            '{"id":"20","active":"true","name":"dummy","range":"10..20"}',
+            $dummy,
+            Type::object(DummyWithValueTransformerAttributes::class),
+            options: ['scale' => 1],
+            valueTransformers: [
+                BooleanToStringValueTransformer::class => new class($this) implements ValueTransformerInterface {
+                    public function __construct(
+                        private JsonStreamWriterTest $test,
+                    ) {
+                    }
+
+                    public function transform(mixed $value, array $options = []): mixed
+                    {
+                        $this->test->assertArrayHasKey('_current_object', $options);
+                        $this->test->assertInstanceof(DummyWithValueTransformerAttributes::class, $options['_current_object']);
+
+                        return (new BooleanToStringValueTransformer())->transform($value, $options);
+                    }
+
+                    public static function getStreamValueType(): Type
+                    {
+                        return BooleanToStringValueTransformer::getStreamValueType();
+                    }
+                },
+                DoubleIntAndCastToStringValueTransformer::class => new DoubleIntAndCastToStringValueTransformer(),
+            ],
+        );
+    }
+
     public function testWriteObjectWithPhpDoc()
     {
         $dummy = new DummyWithPhpDoc();
