@@ -309,21 +309,23 @@ final class PhpAstBuilder
                 ];
             }
 
+            $keyVar = $dataModelNode->getKeyNode()->getAccessor()->toPhpExpr();
+
             $escapedKey = $dataModelNode->getType()->getCollectionKeyType()->isIdentifiedBy(TypeIdentifier::INT)
-                ? new Ternary($this->builder->funcCall('is_int', [$this->builder->var('key')]), $this->builder->var('key'), $this->escapeString($this->builder->var('key')))
-                : $this->escapeString($this->builder->var('key'));
+                ? new Ternary($this->builder->funcCall('is_int', [$keyVar]), $keyVar, $this->escapeString($keyVar))
+                : $this->escapeString($keyVar);
 
             return [
                 new Expression(new Yield_($this->builder->val('{'))),
                 new Expression(new Assign($this->builder->var('prefix'), $this->builder->val(''))),
                 new Foreach_($accessor, $dataModelNode->getItemNode()->getAccessor()->toPhpExpr(), [
-                    'keyVar' => $this->builder->var('key'),
+                    'keyVar' => $keyVar,
                     'stmts' => [
-                        new Expression(new Assign($this->builder->var('key'), $escapedKey)),
+                        new Expression(new Assign($keyVar, $escapedKey)),
                         new Expression(new Yield_(new Encapsed([
                             $this->builder->var('prefix'),
                             new EncapsedStringPart('"'),
-                            $this->builder->var('key'),
+                            $keyVar,
                             new EncapsedStringPart('":'),
                         ]))),
                         ...$this->buildYieldStatements($dataModelNode->getItemNode(), $options, $context),

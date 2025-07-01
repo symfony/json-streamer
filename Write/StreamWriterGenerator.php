@@ -76,7 +76,7 @@ final class StreamWriterGenerator
         $this->phpPrinter ??= new Standard(['phpVersion' => PhpVersion::fromComponents(8, 2)]);
         $this->fs ??= new Filesystem();
 
-        $dataModel = $this->createDataModel($type, new VariableDataAccessor('data'), $options);
+        $dataModel = $this->createDataModel($type, new VariableDataAccessor('data'), $options, ['depth' => 0]);
 
         $nodes = $this->phpAstBuilder->build($dataModel, $options);
         $nodes = $this->phpOptimizer->optimize($nodes);
@@ -180,10 +180,13 @@ final class StreamWriterGenerator
         }
 
         if ($type instanceof CollectionType) {
+            ++$context['depth'];
+
             return new CollectionNode(
                 $accessor,
                 $type,
-                $this->createDataModel($type->getCollectionValueType(), new VariableDataAccessor('value'), $options, $context),
+                $this->createDataModel($type->getCollectionValueType(), new VariableDataAccessor('value' . $context['depth']), $options, $context),
+                $this->createDataModel($type->getCollectionKeyType(), new VariableDataAccessor('key' . $context['depth']), $options, $context),
             );
         }
 

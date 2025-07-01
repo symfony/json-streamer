@@ -21,7 +21,9 @@ use Symfony\Component\JsonStreamer\Mapping\Write\DateTimeTypePropertyMetadataLoa
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Enum\DummyBackedEnum;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Enum\DummyEnum;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\ClassicDummy;
+use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithArray;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithNameAttributes;
+use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithNestedArray;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithOtherDummies;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithUnionProperties;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithValueTransformerAttributes;
@@ -93,6 +95,8 @@ class StreamWriterGeneratorTest extends TestCase
         yield ['null_list', Type::list(Type::null())];
         yield ['object_list', Type::list(Type::object(DummyWithNameAttributes::class))];
         yield ['nullable_object_list', Type::nullable(Type::list(Type::object(DummyWithNameAttributes::class)))];
+        yield ['nested_list', Type::list(Type::object(DummyWithArray::class))];
+        yield ['double_nested_list', Type::list(Type::object(DummyWithNestedArray::class))];
 
         yield ['dict', Type::dict()];
         yield ['object_dict', Type::dict(Type::object(DummyWithNameAttributes::class))];
@@ -141,6 +145,7 @@ class StreamWriterGeneratorTest extends TestCase
             ->with(self::class, [], [
                 'original_type' => $type,
                 'generated_classes' => [self::class => true],
+                'depth' => 0,
             ])
             ->willReturn([]);
 

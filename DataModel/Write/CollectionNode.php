@@ -27,12 +27,13 @@ final class CollectionNode implements DataModelNodeInterface
         private DataAccessorInterface $accessor,
         private CollectionType $type,
         private DataModelNodeInterface $item,
+        private DataModelNodeInterface $key,
     ) {
     }
 
     public function withAccessor(DataAccessorInterface $accessor): self
     {
-        return new self($accessor, $this->type, $this->item);
+        return new self($accessor, $this->type, $this->item, $this->key);
     }
 
     public function getIdentifier(): string
@@ -53,5 +54,10 @@ final class CollectionNode implements DataModelNodeInterface
     public function getItemNode(): DataModelNodeInterface
     {
         return $this->item;
+    }
+
+    public function getKeyNode(): DataModelNodeInterface
+    {
+        return $this->key;
     }
 }
