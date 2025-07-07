@@ -8,9 +8,9 @@ return static function (mixed $data, \Psr\Container\ContainerInterface $valueTra
         if (\is_array($data)) {
             yield '[';
             $prefix = '';
-            foreach ($data as $value) {
+            foreach ($data as $value1) {
                 yield $prefix;
-                yield \json_encode($value->value, \JSON_THROW_ON_ERROR, 511);
+                yield \json_encode($value1->value, \JSON_THROW_ON_ERROR, 511);
                 $prefix = ',';
             }
             yield ']';
