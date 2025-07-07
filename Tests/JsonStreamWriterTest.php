@@ -16,9 +16,11 @@ use Symfony\Component\JsonStreamer\Exception\NotEncodableValueException;
 use Symfony\Component\JsonStreamer\JsonStreamWriter;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Enum\DummyBackedEnum;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\ClassicDummy;
+use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithArray;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithDateTimes;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithGenerics;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithNameAttributes;
+use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithNestedArray;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithNullableProperties;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithPhpDoc;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithUnionProperties;
@@ -106,6 +108,37 @@ class JsonStreamWriterTest extends TestCase
             '{"0":{"id":1,"name":"dummy"},"1":{"id":1,"name":"dummy"}}',
             new \ArrayObject([new ClassicDummy(), new ClassicDummy()]),
             Type::iterable(Type::object(ClassicDummy::class), Type::int()),
+        );
+    }
+
+    public function testWriteNestedCollection()
+    {
+        $dummyWithArray1 = new DummyWithArray();
+        $dummyWithArray1->dummies = [new ClassicDummy()];
+        $dummyWithArray1->customProperty = 'customProperty1';
+
+        $dummyWithArray2 = new DummyWithArray();
+        $dummyWithArray2->dummies = [new ClassicDummy()];
+        $dummyWithArray2->customProperty = 'customProperty2';
+
+        $this->assertWritten(
+            '[{"dummies":[{"id":1,"name":"dummy"}],"customProperty":"customProperty1"},{"dummies":[{"id":1,"name":"dummy"}],"customProperty":"customProperty2"}]',
+            [$dummyWithArray1, $dummyWithArray2],
+            Type::list(Type::object(DummyWithArray::class)),
+        );
+
+        $dummyWithNestedArray1 = new DummyWithNestedArray();
+        $dummyWithNestedArray1->dummies = [$dummyWithArray1];
+        $dummyWithNestedArray1->stringProperty = 'stringProperty1';
+
+        $dummyWithNestedArray2 = new DummyWithNestedArray();
+        $dummyWithNestedArray2->dummies = [$dummyWithArray2];
+        $dummyWithNestedArray2->stringProperty = 'stringProperty2';
+
+        $this->assertWritten(
+            '[{"dummies":[{"dummies":[{"id":1,"name":"dummy"}],"customProperty":"customProperty1"}],"stringProperty":"stringProperty1"},{"dummies":[{"dummies":[{"id":1,"name":"dummy"}],"customProperty":"customProperty2"}],"stringProperty":"stringProperty2"}]',
+            [$dummyWithNestedArray1, $dummyWithNestedArray2],
+            Type::list(Type::object(DummyWithNestedArray::class)),
         );
     }
 

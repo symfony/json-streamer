@@ -209,18 +209,20 @@ final class PhpGenerator
                     .$this->yieldString(']', $context);
             }
 
+            $keyAccessor = $dataModelNode->getKeyNode()->getAccessor();
+
             $escapedKey = $dataModelNode->getType()->getCollectionKeyType()->isIdentifiedBy(TypeIdentifier::INT)
-                ? '$key = is_int($key) ? $key : \substr(\json_encode($key), 1, -1);'
-                : '$key = \substr(\json_encode($key), 1, -1);';
+                ? "$keyAccessor = is_int($keyAccessor) ? $keyAccessor : \substr(\json_encode($keyAccessor), 1, -1);"
+                : "$keyAccessor = \substr(\json_encode($keyAccessor), 1, -1);";
 
             $php = $this->yieldString('{', $context)
                 .$this->flushYieldBuffer($context)
                 .$this->line('$prefix = \'\';', $context)
-                .$this->line("foreach ($accessor as \$key => ".$dataModelNode->getItemNode()->getAccessor().') {', $context);
+                .$this->line("foreach ($accessor as $keyAccessor => ".$dataModelNode->getItemNode()->getAccessor().') {', $context);
 
             ++$context['indentation_level'];
             $php .= $this->line($escapedKey, $context)
-                .$this->yield('"{$prefix}\"{$key}\":"', $context)
+                .$this->yield('"{$prefix}\"{'.$keyAccessor.'}\":"', $context)
                 .$this->generateYields($dataModelNode->getItemNode(), $options, $context)
                 .$this->flushYieldBuffer($context)
                 .$this->line('$prefix = \',\';', $context);
