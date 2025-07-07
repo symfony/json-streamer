@@ -64,7 +64,7 @@ final class StreamWriterGenerator
         $this->phpGenerator ??= new PhpGenerator();
         $this->fs ??= new Filesystem();
 
-        $dataModel = $this->createDataModel($type, '$data', $options);
+        $dataModel = $this->createDataModel($type, '$data', $options, ['depth' => 0]);
         $php = $this->phpGenerator->generate($dataModel, $options);
 
         if (!$this->fs->exists($this->streamWritersDir)) {
@@ -164,10 +164,13 @@ final class StreamWriterGenerator
         }
 
         if ($type instanceof CollectionType) {
+            ++$context['depth'];
+
             return new CollectionNode(
                 $accessor,
                 $type,
-                $this->createDataModel($type->getCollectionValueType(), '$value', $options, $context),
+                $this->createDataModel($type->getCollectionValueType(), '$value'.$context['depth'], $options, $context),
+                $this->createDataModel($type->getCollectionKeyType(), '$key'.$context['depth'], $options, $context),
             );
         }
 

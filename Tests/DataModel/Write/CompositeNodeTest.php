@@ -48,7 +48,7 @@ class CompositeNodeTest extends TestCase
         $composite = new CompositeNode('$data', [
             $scalar = new ScalarNode('$data', Type::int()),
             $object = new ObjectNode('$data', Type::object(self::class), []),
-            $collection = new CollectionNode('$data', Type::list(), new ScalarNode('$data', Type::int())),
+            $collection = new CollectionNode('$data', Type::list(), new ScalarNode('$data', Type::int()), new ScalarNode('$key', Type::string())),
         ]);
 
         $this->assertSame([$collection, $object, $scalar], $composite->getNodes());
