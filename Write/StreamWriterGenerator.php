@@ -185,8 +185,8 @@ final class StreamWriterGenerator
             return new CollectionNode(
                 $accessor,
                 $type,
-                $this->createDataModel($type->getCollectionValueType(), new VariableDataAccessor('value' . $context['depth']), $options, $context),
-                $this->createDataModel($type->getCollectionKeyType(), new VariableDataAccessor('key' . $context['depth']), $options, $context),
+                $this->createDataModel($type->getCollectionValueType(), new VariableDataAccessor('value'.$context['depth']), $options, $context),
+                $this->createDataModel($type->getCollectionKeyType(), new VariableDataAccessor('key'.$context['depth']), $options, $context),
             );
         }
 
