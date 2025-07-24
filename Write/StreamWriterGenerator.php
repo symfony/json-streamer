@@ -138,7 +138,7 @@ final class StreamWriterGenerator
                 foreach ($propertyMetadata->getNativeToStreamValueTransformer() as $valueTransformer) {
                     if (\is_string($valueTransformer)) {
                         $valueTransformerServiceAccessor = "\$valueTransformers->get('$valueTransformer')";
-                        $propertyAccessor = "{$valueTransformerServiceAccessor}->transform($propertyAccessor, \$options)";
+                        $propertyAccessor = "{$valueTransformerServiceAccessor}->transform($propertyAccessor, ['_current_object' => $accessor] + \$options)";
 
                         continue;
                     }
@@ -152,7 +152,7 @@ final class StreamWriterGenerator
                     $functionName = !$functionReflection->getClosureCalledClass()
                         ? $functionReflection->getName()
                         : \sprintf('%s::%s', $functionReflection->getClosureCalledClass()->getName(), $functionReflection->getName());
-                    $arguments = $functionReflection->isUserDefined() ? "$propertyAccessor, \$options" : $propertyAccessor;
+                    $arguments = $functionReflection->isUserDefined() ? "$propertyAccessor, ['_current_object' => $accessor] + \$options" : $propertyAccessor;
 
                     $propertyAccessor = "$functionName($arguments)";
                 }

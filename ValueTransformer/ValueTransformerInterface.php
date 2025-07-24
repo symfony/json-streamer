@@ -23,7 +23,10 @@ use Symfony\Component\TypeInfo\Type;
 interface ValueTransformerInterface
 {
     /**
-     * @param array<string, mixed> $options
+     * @param array{
+     *     _current_object?: object, // When writing stream: the object holding the current property
+     *     ...<string, mixed>,
+     * } $options
      */
     public function transform(mixed $value, array $options = []): mixed;
 

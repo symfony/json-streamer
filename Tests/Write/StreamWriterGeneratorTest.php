@@ -22,6 +22,7 @@ use Symfony\Component\JsonStreamer\Tests\Fixtures\Enum\DummyBackedEnum;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Enum\DummyEnum;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\ClassicDummy;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithArray;
+use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithDollarNamedProperties;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithNameAttributes;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithNestedArray;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithOtherDummies;
@@ -110,6 +111,7 @@ class StreamWriterGeneratorTest extends TestCase
         yield ['object_in_object', Type::object(DummyWithOtherDummies::class)];
         yield ['object_with_value_transformer', Type::object(DummyWithValueTransformerAttributes::class)];
         yield ['self_referencing_object', Type::object(SelfReferencingDummy::class)];
+        yield ['object_with_dollar_named_properties', Type::object(DummyWithDollarNamedProperties::class)];
 
         yield ['union', Type::union(Type::int(), Type::list(Type::enum(DummyBackedEnum::class)), Type::object(DummyWithNameAttributes::class))];
         yield ['object_with_union', Type::object(DummyWithUnionProperties::class)];

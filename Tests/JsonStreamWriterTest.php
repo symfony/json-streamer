@@ -18,6 +18,7 @@ use Symfony\Component\JsonStreamer\Tests\Fixtures\Enum\DummyBackedEnum;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\ClassicDummy;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithArray;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithDateTimes;
+use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithDollarNamedProperties;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithGenerics;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithNameAttributes;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithNestedArray;
@@ -81,7 +82,7 @@ class JsonStreamWriterTest extends TestCase
         $this->assertWritten('{"value":"foo"}', $dummy, Type::object(DummyWithUnionProperties::class));
 
         $dummy->value = null;
-        $this->assertWritten('{"value":null}', $dummy, Type::object(DummyWithUnionProperties::class));
+        $this->assertWritten('{}', $dummy, Type::object(DummyWithUnionProperties::class));
     }
 
     public function testWriteCollection()
@@ -190,6 +191,42 @@ class JsonStreamWriterTest extends TestCase
         );
     }
 
+    public function testValueTransformerHasAccessToCurrentObject()
+    {
+        $dummy = new DummyWithValueTransformerAttributes();
+        $dummy->id = 10;
+        $dummy->active = true;
+
+        $this->assertWritten(
+            '{"id":"20","active":"true","name":"dummy","range":"10..20"}',
+            $dummy,
+            Type::object(DummyWithValueTransformerAttributes::class),
+            options: ['scale' => 1],
+            valueTransformers: [
+                BooleanToStringValueTransformer::class => new class($this) implements ValueTransformerInterface {
+                    public function __construct(
+                        private JsonStreamWriterTest $test,
+                    ) {
+                    }
+
+                    public function transform(mixed $value, array $options = []): mixed
+                    {
+                        $this->test->assertArrayHasKey('_current_object', $options);
+                        $this->test->assertInstanceof(DummyWithValueTransformerAttributes::class, $options['_current_object']);
+
+                        return (new BooleanToStringValueTransformer())->transform($value, $options);
+                    }
+
+                    public static function getStreamValueType(): Type
+                    {
+                        return BooleanToStringValueTransformer::getStreamValueType();
+                    }
+                },
+                DoubleIntAndCastToStringValueTransformer::class => new DoubleIntAndCastToStringValueTransformer(),
+            ],
+        );
+    }
+
     public function testWriteObjectWithPhpDoc()
     {
         $dummy = new DummyWithPhpDoc();
@@ -202,7 +239,18 @@ class JsonStreamWriterTest extends TestCase
     {
         $dummy = new DummyWithNullableProperties();
 
-        $this->assertWritten('{"name":null,"enum":null}', $dummy, Type::object(DummyWithNullableProperties::class));
+        $this->assertWritten('{}', $dummy, Type::object(DummyWithNullableProperties::class));
+
+        $dummy->name = 'name';
+
+        $this->assertWritten('{"name":"name"}', $dummy, Type::object(DummyWithNullableProperties::class));
+        $this->assertWritten('{"name":"name","enum":null}', $dummy, Type::object(DummyWithNullableProperties::class), options: ['include_null_properties' => true]);
+
+        $dummy->name = null;
+        $dummy->enum = DummyBackedEnum::ONE;
+
+        $this->assertWritten('{"enum":1}', $dummy, Type::object(DummyWithNullableProperties::class));
+        $this->assertWritten('{"name":null,"enum":1}', $dummy, Type::object(DummyWithNullableProperties::class), options: ['include_null_properties' => true]);
     }
 
     public function testWriteObjectWithDateTimes()
@@ -217,6 +265,11 @@ class JsonStreamWriterTest extends TestCase
             Type::object(DummyWithDateTimes::class),
             options: [DateTimeToStringValueTransformer::FORMAT_KEY => 'Y-m-d'],
         );
+    }
+
+    public function testWriteObjectWithDollarNamedProperties()
+    {
+        $this->assertWritten('{"$foo":true,"{$foo->bar}":true}', new DummyWithDollarNamedProperties(), Type::object(DummyWithDollarNamedProperties::class));
     }
 
     /**
