@@ -11,6 +11,7 @@
 
 namespace Symfony\Component\JsonStreamer\Tests\Read;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\JsonStreamer\Exception\InvalidStreamException;
 use Symfony\Component\JsonStreamer\Read\Lexer;
@@ -44,9 +45,8 @@ class LexerTest extends TestCase
 
     /**
      * Ensures that the lexer is compliant with RFC 8259.
-     *
-     * @dataProvider jsonDataProvider
      */
+    #[DataProvider('jsonDataProvider')]
     public function testValidJson(string $name, string $json, bool $valid)
     {
         $resource = fopen('php://temp', 'w');

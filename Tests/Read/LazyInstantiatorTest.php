@@ -11,6 +11,7 @@
 
 namespace Symfony\Component\JsonStreamer\Tests\Read;
 
+use PHPUnit\Framework\Attributes\RequiresPhp;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\JsonStreamer\Exception\InvalidArgumentException;
 use Symfony\Component\JsonStreamer\Read\LazyInstantiator;
@@ -32,9 +33,7 @@ class LazyInstantiatorTest extends TestCase
         }
     }
 
-    /**
-     * @requires PHP < 8.4
-     */
+    #[RequiresPhp('<8.4')]
     public function testCreateLazyGhostUsingVarExporter()
     {
         $ghost = (new LazyInstantiator($this->lazyGhostsDir))->instantiate(ClassicDummy::class, function (ClassicDummy $object): void {
@@ -44,9 +43,7 @@ class LazyInstantiatorTest extends TestCase
         $this->assertSame(123, $ghost->id);
     }
 
-    /**
-     * @requires PHP < 8.4
-     */
+    #[RequiresPhp('<8.4')]
     public function testCreateCacheFile()
     {
         // use DummyForLazyInstantiation class to be sure that the instantiated object is not already in cache.
@@ -55,18 +52,14 @@ class LazyInstantiatorTest extends TestCase
         $this->assertCount(1, glob($this->lazyGhostsDir.'/*'));
     }
 
-    /**
-     * @requires PHP < 8.4
-     */
+    #[RequiresPhp('<8.4')]
     public function testThrowIfLazyGhostDirNotDefined()
     {
         $this->expectException(InvalidArgumentException::class);
         new LazyInstantiator();
     }
 
-    /**
-     * @requires PHP 8.4
-     */
+    #[RequiresPhp('8.4')]
     public function testCreateLazyGhostUsingPhp()
     {
         $ghost = (new LazyInstantiator())->instantiate(ClassicDummy::class, function (ClassicDummy $object): void {
