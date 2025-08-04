@@ -14,10 +14,11 @@ namespace Symfony\Component\JsonStreamer\CacheWarmer;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\HttpKernel\CacheWarmer\CacheWarmer;
 use Symfony\Component\JsonStreamer\Exception\RuntimeException;
+use Symfony\Component\VarExporter\LazyGhostTrait;
 use Symfony\Component\VarExporter\ProxyHelper;
 
 /**
- * Generates lazy ghost {@see \Symfony\Component\VarExporter\LazyGhostTrait}
+ * Generates lazy ghost {@see LazyGhostTrait}
  * PHP files for $streamable types.
  *
  * @author Mathias Arlaud <mathias.arlaud@gmail.com>

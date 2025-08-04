@@ -14,10 +14,11 @@ namespace Symfony\Component\JsonStreamer\Read;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\JsonStreamer\Exception\InvalidArgumentException;
 use Symfony\Component\JsonStreamer\Exception\RuntimeException;
+use Symfony\Component\VarExporter\LazyGhostTrait;
 use Symfony\Component\VarExporter\ProxyHelper;
 
 /**
- * Instantiates a new $className lazy ghost {@see \Symfony\Component\VarExporter\LazyGhostTrait}.
+ * Instantiates a new $className lazy ghost {@see LazyGhostTrait}.
  *
  * Prior to PHP 8.4, the "$className" argument class must not be final.
  * The $initializer must be a callable that sets the actual object values when being called.
