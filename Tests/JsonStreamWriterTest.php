@@ -11,6 +11,7 @@
 
 namespace Symfony\Component\JsonStreamer\Tests;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\JsonStreamer\Exception\NotEncodableValueException;
 use Symfony\Component\JsonStreamer\JsonStreamWriter;
@@ -272,9 +273,7 @@ class JsonStreamWriterTest extends TestCase
         $this->assertWritten('{"$foo":true,"{$foo->bar}":true}', new DummyWithDollarNamedProperties(), Type::object(DummyWithDollarNamedProperties::class));
     }
 
-    /**
-     * @dataProvider throwWhenMaxDepthIsReachedDataProvider
-     */
+    #[DataProvider('throwWhenMaxDepthIsReachedDataProvider')]
     public function testThrowWhenMaxDepthIsReached(Type $type, mixed $data)
     {
         $writer = JsonStreamWriter::create(streamWritersDir: $this->streamWritersDir);

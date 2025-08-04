@@ -11,6 +11,7 @@
 
 namespace Symfony\Component\JsonStreamer\Tests\Read;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\JsonStreamer\Exception\UnsupportedException;
 use Symfony\Component\JsonStreamer\Mapping\GenericTypePropertyMetadataLoader;
@@ -51,9 +52,7 @@ class StreamReaderGeneratorTest extends TestCase
         }
     }
 
-    /**
-     * @dataProvider generatedStreamReaderDataProvider
-     */
+    #[DataProvider('generatedStreamReaderDataProvider')]
     public function testGeneratedStreamReader(string $fixture, Type $type)
     {
         $propertyMetadataLoader = new GenericTypePropertyMetadataLoader(
