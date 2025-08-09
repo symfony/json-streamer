@@ -76,7 +76,7 @@ final class StreamReaderGenerator
         try {
             $this->fs->dumpFile($tmpFile, $php);
             $this->fs->rename($tmpFile, $path);
-            $this->fs->chmod($path, 0666 & ~umask());
+            $this->fs->chmod($path, 0o666 & ~umask());
         } catch (IOException $e) {
             throw new RuntimeException(\sprintf('Failed to write "%s" stream reader file.', $path), previous: $e);
         }
