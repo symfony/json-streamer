@@ -79,7 +79,7 @@ final class Splitter
             }
 
             [$value, $position] = $token;
-            $offset = $offset ?? $position;
+            $offset ??= $position;
 
             if (isset(self::NESTING_CHARS[$value])) {
                 ++$level;
