@@ -1,7 +1,7 @@
 <?php
 
 /**
- * @param array<int,mixed> $data
+ * @param list<mixed> $data
  */
 return static function (mixed $data, \Psr\Container\ContainerInterface $valueTransformers, array $options): \Traversable {
     try {
