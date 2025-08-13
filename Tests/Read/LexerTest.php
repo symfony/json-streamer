@@ -101,7 +101,9 @@ class LexerTest extends TestCase
             ["a",
             4
             ,1,
-            JSON, false];
+            JSON,
+            false,
+        ];
         yield ['array_number_and_comma', '[1,]', false];
         yield ['array_number_and_several_commas', '[1,,]', false];
         yield ['array_spaces_vertical_tab_formfeed', '["
@@ -113,7 +115,9 @@ a"\f]', false];
             [1,
             1
             ,1
-            JSON, false];
+            JSON,
+            false,
+        ];
         yield ['array_unclosed_with_object_inside', '[{}', false];
         yield ['incomplete_false', '[fals]', false];
         yield ['incomplete_null', '[nul]', false];
@@ -226,7 +230,9 @@ a"\f]', false];
         yield ['string_unescaped_newline', <<<JSON
             ["new
             line"]
-            JSON, false];
+            JSON,
+            false,
+        ];
         yield ['string_unescaped_tab', '["	"]', false];
         yield ['string_unicode_CapitalU', '"\\UA66D"', false];
         yield ['string_with_trailing_garbage', '""x', false];
@@ -286,7 +292,9 @@ a"\f]', false];
         yield ['array_with_1_and_newline', <<<JSON
             [1
             ]
-            JSON, true];
+            JSON,
+            true,
+        ];
         yield ['array_with_leading_space', '[1]', true];
         yield ['array_with_several_null', '[1,null,null,null,2]', true];
         yield ['array_with_trailing_space', '[2] ', true];
@@ -321,7 +329,9 @@ a"\f]', false];
             {
             "a": "b"
             }
-            JSON, true];
+            JSON,
+            true,
+        ];
         yield ['string_1_2_3_bytes_UTF-8_sequences', '["\\u0060\\u012a\\u12AB"]', true];
         yield ['string_accepted_surrogate_pair', '["\\uD801\\udc37"]', true];
         yield ['string_accepted_surrogate_pairs', '["\\ud83d\\ude39\\ud83d\\udc8d"]', true];
@@ -375,7 +385,9 @@ a"\f]', false];
         yield ['structure_trailing_newline', <<<JSON
             ["a"]
 
-            JSON, true];
+            JSON,
+            true,
+        ];
         yield ['structure_true_in_array', '[true]', true];
         yield ['structure_whitespace_array', '[] ', true];
 
