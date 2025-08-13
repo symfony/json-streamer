@@ -1,7 +1,7 @@
 <?php
 
 /**
- * @return array<int,Symfony\Component\JsonStreamer\Tests\Fixtures\Model\ClassicDummy>
+ * @return list<Symfony\Component\JsonStreamer\Tests\Fixtures\Model\ClassicDummy>
  */
 return static function (mixed $stream, \Psr\Container\ContainerInterface $valueTransformers, \Symfony\Component\JsonStreamer\Read\LazyInstantiator $instantiator, array $options): mixed {
     $providers['list<Symfony\Component\JsonStreamer\Tests\Fixtures\Model\ClassicDummy>'] = static function ($stream, $offset, $length) use ($options, $valueTransformers, $instantiator, &$providers) {
