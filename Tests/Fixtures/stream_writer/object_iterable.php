@@ -1,7 +1,7 @@
 <?php
 
 /**
- * @param iterable<int|string,Symfony\Component\JsonStreamer\Tests\Fixtures\Model\ClassicDummy> $data
+ * @param iterable<int|string, Symfony\Component\JsonStreamer\Tests\Fixtures\Model\ClassicDummy> $data
  */
 return static function (mixed $data, \Psr\Container\ContainerInterface $valueTransformers, array $options): \Traversable {
     try {
