@@ -17,8 +17,6 @@ use Symfony\Component\TypeInfo\Type;
  * Transforms a native value before stream writing and after stream reading.
  *
  * @author Mathias Arlaud <mathias.arlaud@gmail.com>
- *
- * @experimental
  */
 interface ValueTransformerInterface
 {

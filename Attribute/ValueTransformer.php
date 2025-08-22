@@ -19,8 +19,6 @@ use Symfony\Component\JsonStreamer\ValueTransformer\ValueTransformerInterface;
  * that will be used to transform the property data during stream reading/writing.
  *
  * @author Mathias Arlaud <mathias.arlaud@gmail.com>
- *
- * @experimental
  */
 #[\Attribute(\Attribute::TARGET_PROPERTY)]
 class ValueTransformer

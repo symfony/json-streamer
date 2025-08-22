@@ -17,8 +17,6 @@ use Symfony\Component\JsonStreamer\Exception\UnexpectedValueException;
  * Splits collections to retrieve the offset and length of each element.
  *
  * @author Mathias Arlaud <mathias.arlaud@gmail.com>
- *
- * @experimental
  */
 final class Splitter
 {
