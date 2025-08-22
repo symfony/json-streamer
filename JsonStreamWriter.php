@@ -33,8 +33,6 @@ use Symfony\Component\TypeInfo\TypeResolver\TypeResolver;
  *     include_null_properties?: bool,
  *     ...<string, mixed>,
  * }>
- *
- * @experimental
  */
 final class JsonStreamWriter implements StreamWriterInterface
 {

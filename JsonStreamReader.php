@@ -32,8 +32,6 @@ use Symfony\Component\TypeInfo\TypeResolver\TypeResolver;
  * @author Mathias Arlaud <mathias.arlaud@gmail.com>
  *
  * @implements StreamReaderInterface<array<string, mixed>>
- *
- * @experimental
  */
 final class JsonStreamReader implements StreamReaderInterface
 {

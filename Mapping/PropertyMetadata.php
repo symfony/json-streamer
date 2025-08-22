@@ -17,8 +17,6 @@ use Symfony\Component\TypeInfo\Type;
  * Holds stream reading/writing metadata about a given property.
  *
  * @author Mathias Arlaud <mathias.arlaud@gmail.com>
- *
- * @experimental
  */
 final class PropertyMetadata
 {
