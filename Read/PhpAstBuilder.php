@@ -379,10 +379,12 @@ final class PhpAstBuilder
             ? $this->builder->funcCall($this->builder->var('iterable'), [$this->builder->var('stream'), $this->builder->var('data')])
             : $this->builder->funcCall($this->builder->var('iterable'), [$this->builder->var('data')]);
 
+        $collectionKeyType = $node->getType()->getCollectionKeyType();
+
         $prepareDataStmts = $decodeFromStream ? [
             new Expression(new Assign($this->builder->var('data'), $this->builder->staticCall(
                 new FullyQualified(Splitter::class),
-                $node->getType()->isList() ? 'splitList' : 'splitDict',
+                ($collectionKeyType instanceof BuiltinType && TypeIdentifier::INT === $collectionKeyType->getTypeIdentifier()) ? 'splitList' : 'splitDict',
                 [$this->builder->var('stream'), $this->builder->var('offset'), $this->builder->var('length')],
             ))),
         ] : [];

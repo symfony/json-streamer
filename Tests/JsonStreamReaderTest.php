@@ -87,7 +87,7 @@ class JsonStreamReaderTest extends TestCase
         $this->assertRead($reader, function (mixed $read) {
             $this->assertIsIterable($read);
             $this->assertSame([true, false], iterator_to_array($read));
-        }, '{"0": true, "1": false}', Type::iterable(Type::bool(), Type::int()));
+        }, '[true, false]', Type::iterable(Type::bool(), Type::int()));
     }
 
     public function testReadObject()
