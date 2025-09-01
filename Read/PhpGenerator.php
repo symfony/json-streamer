@@ -136,8 +136,10 @@ final class PhpGenerator
 
             ++$context['indentation_level'];
 
+            $collectionKeyType = $node->getType()->getCollectionKeyType();
+
             $arguments = $decodeFromStream ? '$stream, $data' : '$data';
-            $php .= ($decodeFromStream ? $this->line('$data = \\'.Splitter::class.'::'.($node->getType()->isList() ? 'splitList' : 'splitDict').'($stream, $offset, $length);', $context) : '')
+            $php .= ($decodeFromStream ? $this->line('$data = \\'.Splitter::class.'::'.($collectionKeyType instanceof BuiltinType && TypeIdentifier::INT === $collectionKeyType->getTypeIdentifier() ? 'splitList' : 'splitDict').'($stream, $offset, $length);', $context) : '')
                 .$this->line("\$iterable = static function ($arguments) use (\$options, \$valueTransformers, \$instantiator, &\$providers) {", $context)
                 .$this->line('    foreach ($data as $k => $v) {', $context);
 
