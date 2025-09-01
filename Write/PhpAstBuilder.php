@@ -294,7 +294,9 @@ final class PhpAstBuilder
         if ($dataModelNode instanceof CollectionNode) {
             ++$context['depth'];
 
-            if ($dataModelNode->getType()->isList()) {
+            $collectionKeyType = $dataModelNode->getType()->getCollectionKeyType();
+
+            if ($collectionKeyType instanceof BuiltinType && TypeIdentifier::INT === $collectionKeyType->getTypeIdentifier()) {
                 return [
                     new Expression(new Yield_($this->builder->val('['))),
                     new Expression(new Assign($this->builder->var('prefix'), $this->builder->val(''))),
