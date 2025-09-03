@@ -107,7 +107,7 @@ class JsonStreamWriterTest extends TestCase
         );
 
         $this->assertWritten(
-            '{"0":{"id":1,"name":"dummy"},"1":{"id":1,"name":"dummy"}}',
+            '[{"id":1,"name":"dummy"},{"id":1,"name":"dummy"}]',
             new \ArrayObject([new ClassicDummy(), new ClassicDummy()]),
             Type::iterable(Type::object(ClassicDummy::class), Type::int()),
         );
