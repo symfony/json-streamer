@@ -191,7 +191,9 @@ final class PhpGenerator
         if ($dataModelNode instanceof CollectionNode) {
             ++$context['depth'];
 
-            if ($dataModelNode->getType()->isList()) {
+            $collectionKeyType = $dataModelNode->getType()->getCollectionKeyType();
+
+            if ($collectionKeyType instanceof BuiltinType && TypeIdentifier::INT === $collectionKeyType->getTypeIdentifier()) {
                 $php = $this->yieldInterpolatedString('[', $context)
                     .$this->flushYieldBuffer($context)
                     .$this->line('$prefix'.$context['depth'].' = \'\';', $context)
