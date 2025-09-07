@@ -59,7 +59,7 @@ class LazyInstantiatorTest extends TestCase
         new LazyInstantiator();
     }
 
-    #[RequiresPhp('8.4')]
+    #[RequiresPhp('>=8.4')]
     public function testCreateLazyGhostUsingPhp()
     {
         $ghost = (new LazyInstantiator())->instantiate(ClassicDummy::class, function (ClassicDummy $object): void {
