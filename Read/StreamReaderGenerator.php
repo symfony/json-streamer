@@ -135,7 +135,7 @@ final class StreamReaderGenerator
                     'name' => $propertyMetadata->getName(),
                     'value' => $this->createDataModel($propertyMetadata->getType(), $options, $context),
                     'accessor' => function (string $accessor) use ($propertyMetadata): string {
-                        foreach ($propertyMetadata->getStreamToNativeValueTransformers() as $valueTransformer) {
+                        foreach ($propertyMetadata->getValueTransformers() as $valueTransformer) {
                             if (\is_string($valueTransformer)) {
                                 $accessor = "\$valueTransformers->get('$valueTransformer')->transform($accessor, \$options)";
 

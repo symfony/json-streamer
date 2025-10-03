@@ -135,7 +135,7 @@ final class StreamWriterGenerator
             foreach ($propertiesMetadata as $streamedName => $propertyMetadata) {
                 $propertyAccessor = $propertyMetadata->getName() ? $accessor.'->'.$propertyMetadata->getName() : 'null';
 
-                foreach ($propertyMetadata->getNativeToStreamValueTransformer() as $valueTransformer) {
+                foreach ($propertyMetadata->getValueTransformers() as $valueTransformer) {
                     if (\is_string($valueTransformer)) {
                         $valueTransformerServiceAccessor = "\$valueTransformers->get('$valueTransformer')";
                         $propertyAccessor = "{$valueTransformerServiceAccessor}->transform($propertyAccessor, ['_current_object' => $accessor] + \$options)";

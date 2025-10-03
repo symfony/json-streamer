@@ -66,7 +66,7 @@ final class AttributePropertyMetadataLoader implements PropertyMetadataLoaderInt
 
                 $result[$streamedName] = $initialMetadata
                     ->withType($valueTransformerService::getStreamValueType())
-                    ->withAdditionalNativeToStreamValueTransformer($valueTransformer);
+                    ->withAdditionalValueTransformer($valueTransformer);
 
                 continue;
             }
@@ -79,7 +79,7 @@ final class AttributePropertyMetadataLoader implements PropertyMetadataLoaderInt
 
             $result[$streamedName] = $initialMetadata
                 ->withType($this->typeResolver->resolve($valueTransformerReflection))
-                ->withAdditionalNativeToStreamValueTransformer($valueTransformer);
+                ->withAdditionalValueTransformer($valueTransformer);
         }
 
         return $result;
