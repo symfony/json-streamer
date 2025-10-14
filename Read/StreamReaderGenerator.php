@@ -127,6 +127,10 @@ final class StreamReaderGenerator
             $propertiesMetadata = $this->propertyMetadataLoader->load($className, $options, $context);
 
             foreach ($propertiesMetadata as $streamedName => $propertyMetadata) {
+                if (!$propertyMetadata->getName()) {
+                    continue;
+                }
+
                 $propertiesNodes[$streamedName] = [
                     'name' => $propertyMetadata->getName(),
                     'value' => $this->createDataModel($propertyMetadata->getType(), $options, $context),

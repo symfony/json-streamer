@@ -42,8 +42,12 @@ final class AttributePropertyMetadataLoader implements PropertyMetadataLoaderInt
         $result = [];
 
         foreach ($initialResult as $initialStreamedName => $initialMetadata) {
+            if (!$initialName = $initialMetadata->getName()) {
+                continue;
+            }
+
             try {
-                $propertyReflection = new \ReflectionProperty($className, $initialMetadata->getName());
+                $propertyReflection = new \ReflectionProperty($className, $initialName);
             } catch (\ReflectionException $e) {
                 throw new RuntimeException($e->getMessage(), $e->getCode(), $e);
             }

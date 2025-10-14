@@ -25,19 +25,31 @@ final class PropertyMetadata
      * @param list<string|\Closure> $streamToNativeValueTransformers
      */
     public function __construct(
-        private string $name,
+        private ?string $name,
         private Type $type,
         private array $nativeToStreamValueTransformers = [],
         private array $streamToNativeValueTransformers = [],
     ) {
     }
 
-    public function getName(): string
+    /**
+     * @param list<string|\Closure> $nativeToStreamValueTransformers
+     * @param list<string|\Closure> $streamToNativeValueTransformers
+     */
+    public static function createSynthetic(
+        Type $type,
+        array $nativeToStreamValueTransformers = [],
+        array $streamToNativeValueTransformers = [],
+    ): self {
+        return new self(null, $type, $nativeToStreamValueTransformers, $streamToNativeValueTransformers);
+    }
+
+    public function getName(): ?string
     {
         return $this->name;
     }
 
-    public function withName(string $name): self
+    public function withName(?string $name): self
     {
         return new self($name, $this->type, $this->nativeToStreamValueTransformers, $this->streamToNativeValueTransformers);
     }
