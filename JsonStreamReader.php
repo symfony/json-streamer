@@ -13,6 +13,7 @@ namespace Symfony\Component\JsonStreamer;
 
 use PHPStan\PhpDocParser\Parser\PhpDocParser;
 use Psr\Container\ContainerInterface;
+use Symfony\Component\Config\ConfigCacheFactoryInterface;
 use Symfony\Component\JsonStreamer\Mapping\GenericTypePropertyMetadataLoader;
 use Symfony\Component\JsonStreamer\Mapping\PropertyMetadataLoader;
 use Symfony\Component\JsonStreamer\Mapping\PropertyMetadataLoaderInterface;
@@ -46,8 +47,9 @@ final class JsonStreamReader implements StreamReaderInterface
         PropertyMetadataLoaderInterface $propertyMetadataLoader,
         string $streamReadersDir,
         ?string $lazyGhostsDir = null,
+        ?ConfigCacheFactoryInterface $configCacheFactory = null,
     ) {
-        $this->streamReaderGenerator = new StreamReaderGenerator($propertyMetadataLoader, $streamReadersDir);
+        $this->streamReaderGenerator = new StreamReaderGenerator($propertyMetadataLoader, $streamReadersDir, $configCacheFactory);
         $this->instantiator = new Instantiator();
         $this->lazyInstantiator = new LazyInstantiator($lazyGhostsDir);
     }

@@ -14,8 +14,7 @@ namespace Symfony\Component\JsonStreamer\Read;
 use PhpParser\PhpVersion;
 use PhpParser\PrettyPrinter;
 use PhpParser\PrettyPrinter\Standard;
-use Symfony\Component\Filesystem\Exception\IOException;
-use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Component\Config\ConfigCacheFactoryInterface;
 use Symfony\Component\JsonStreamer\DataModel\DataAccessorInterface;
 use Symfony\Component\JsonStreamer\DataModel\FunctionDataAccessor;
 use Symfony\Component\JsonStreamer\DataModel\Read\BackedEnumNode;
@@ -29,6 +28,7 @@ use Symfony\Component\JsonStreamer\DataModel\VariableDataAccessor;
 use Symfony\Component\JsonStreamer\Exception\RuntimeException;
 use Symfony\Component\JsonStreamer\Exception\UnsupportedException;
 use Symfony\Component\JsonStreamer\Mapping\PropertyMetadataLoaderInterface;
+use Symfony\Component\JsonStreamer\StreamerDumper;
 use Symfony\Component\TypeInfo\Type;
 use Symfony\Component\TypeInfo\Type\BackedEnumType;
 use Symfony\Component\TypeInfo\Type\BuiltinType;
@@ -47,14 +47,16 @@ use Symfony\Component\TypeInfo\Type\UnionType;
  */
 final class StreamReaderGenerator
 {
+    private StreamerDumper $dumper;
     private ?PhpAstBuilder $phpAstBuilder = null;
     private ?PrettyPrinter $phpPrinter = null;
-    private ?Filesystem $fs = null;
 
     public function __construct(
         private PropertyMetadataLoaderInterface $propertyMetadataLoader,
         private string $streamReadersDir,
+        ?ConfigCacheFactoryInterface $cacheFactory = null,
     ) {
+        $this->dumper = new StreamerDumper($propertyMetadataLoader, $streamReadersDir, $cacheFactory);
     }
 
     /**
@@ -64,46 +66,27 @@ final class StreamReaderGenerator
      */
     public function generate(Type $type, bool $decodeFromStream, array $options = []): string
     {
-        $path = $this->getPath($type, $decodeFromStream);
-        if (is_file($path)) {
-            return $path;
-        }
+        $path = \sprintf('%s%s%s.json%s.php', $this->streamReadersDir, \DIRECTORY_SEPARATOR, hash('xxh128', (string) $type), $decodeFromStream ? '.stream' : '');
+        $generateContent = function () use ($type, $decodeFromStream, $options): string {
+            $this->phpAstBuilder ??= new PhpAstBuilder();
+            $this->phpPrinter ??= new Standard(['phpVersion' => PhpVersion::fromComponents(8, 2)]);
 
-        $this->phpAstBuilder ??= new PhpAstBuilder();
-        $this->phpPrinter ??= new Standard(['phpVersion' => PhpVersion::fromComponents(8, 2)]);
-        $this->fs ??= new Filesystem();
+            $dataModel = $this->createDataModel($type, $options);
+            $nodes = $this->phpAstBuilder->build($dataModel, $decodeFromStream, $options);
 
-        $dataModel = $this->createDataModel($type, $options);
-        $nodes = $this->phpAstBuilder->build($dataModel, $decodeFromStream, $options);
-        $content = $this->phpPrinter->prettyPrintFile($nodes)."\n";
+            return $this->phpPrinter->prettyPrintFile($nodes)."\n";
+        };
 
-        if (!$this->fs->exists($this->streamReadersDir)) {
-            $this->fs->mkdir($this->streamReadersDir);
-        }
-
-        $tmpFile = $this->fs->tempnam(\dirname($path), basename($path));
-
-        try {
-            $this->fs->dumpFile($tmpFile, $content);
-            $this->fs->rename($tmpFile, $path);
-            $this->fs->chmod($path, 0666 & ~umask());
-        } catch (IOException $e) {
-            throw new RuntimeException(\sprintf('Failed to write "%s" stream reader file.', $path), previous: $e);
-        }
+        $this->dumper->dump($type, $path, $generateContent);
 
         return $path;
-    }
-
-    private function getPath(Type $type, bool $decodeFromStream): string
-    {
-        return \sprintf('%s%s%s.json%s.php', $this->streamReadersDir, \DIRECTORY_SEPARATOR, hash('xxh128', (string) $type), $decodeFromStream ? '.stream' : '');
     }
 
     /**
      * @param array<string, mixed> $options
      * @param array<string, mixed> $context
      */
-    public function createDataModel(Type $type, array $options = [], array $context = []): DataModelNodeInterface
+    private function createDataModel(Type $type, array $options = [], array $context = []): DataModelNodeInterface
     {
         $context['original_type'] ??= $type;
 

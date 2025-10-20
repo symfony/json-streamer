@@ -13,6 +13,7 @@ namespace Symfony\Component\JsonStreamer;
 
 use PHPStan\PhpDocParser\Parser\PhpDocParser;
 use Psr\Container\ContainerInterface;
+use Symfony\Component\Config\ConfigCacheFactoryInterface;
 use Symfony\Component\JsonStreamer\Mapping\GenericTypePropertyMetadataLoader;
 use Symfony\Component\JsonStreamer\Mapping\PropertyMetadataLoader;
 use Symfony\Component\JsonStreamer\Mapping\PropertyMetadataLoaderInterface;
@@ -41,8 +42,9 @@ final class JsonStreamWriter implements StreamWriterInterface
         private ContainerInterface $valueTransformers,
         PropertyMetadataLoaderInterface $propertyMetadataLoader,
         string $streamWritersDir,
+        ?ConfigCacheFactoryInterface $configCacheFactory = null,
     ) {
-        $this->streamWriterGenerator = new StreamWriterGenerator($propertyMetadataLoader, $streamWritersDir);
+        $this->streamWriterGenerator = new StreamWriterGenerator($propertyMetadataLoader, $streamWritersDir, $configCacheFactory);
     }
 
     public function write(mixed $data, Type $type, array $options = []): \Traversable&\Stringable

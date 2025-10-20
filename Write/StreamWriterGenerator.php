@@ -14,8 +14,7 @@ namespace Symfony\Component\JsonStreamer\Write;
 use PhpParser\PhpVersion;
 use PhpParser\PrettyPrinter;
 use PhpParser\PrettyPrinter\Standard;
-use Symfony\Component\Filesystem\Exception\IOException;
-use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Component\Config\ConfigCacheFactoryInterface;
 use Symfony\Component\JsonStreamer\DataModel\DataAccessorInterface;
 use Symfony\Component\JsonStreamer\DataModel\FunctionDataAccessor;
 use Symfony\Component\JsonStreamer\DataModel\PropertyDataAccessor;
@@ -30,6 +29,7 @@ use Symfony\Component\JsonStreamer\DataModel\Write\ScalarNode;
 use Symfony\Component\JsonStreamer\Exception\RuntimeException;
 use Symfony\Component\JsonStreamer\Exception\UnsupportedException;
 use Symfony\Component\JsonStreamer\Mapping\PropertyMetadataLoaderInterface;
+use Symfony\Component\JsonStreamer\StreamerDumper;
 use Symfony\Component\TypeInfo\Type;
 use Symfony\Component\TypeInfo\Type\BackedEnumType;
 use Symfony\Component\TypeInfo\Type\BuiltinType;
@@ -48,15 +48,17 @@ use Symfony\Component\TypeInfo\Type\UnionType;
  */
 final class StreamWriterGenerator
 {
+    private StreamerDumper $dumper;
     private ?PhpAstBuilder $phpAstBuilder = null;
     private ?PhpOptimizer $phpOptimizer = null;
     private ?PrettyPrinter $phpPrinter = null;
-    private ?Filesystem $fs = null;
 
     public function __construct(
         private PropertyMetadataLoaderInterface $propertyMetadataLoader,
         private string $streamWritersDir,
+        ?ConfigCacheFactoryInterface $cacheFactory = null,
     ) {
+        $this->dumper = new StreamerDumper($propertyMetadataLoader, $streamWritersDir, $cacheFactory);
     }
 
     /**
@@ -66,43 +68,22 @@ final class StreamWriterGenerator
      */
     public function generate(Type $type, array $options = []): string
     {
-        $path = $this->getPath($type);
-        if (is_file($path)) {
-            return $path;
-        }
+        $path = \sprintf('%s%s%s.json.php', $this->streamWritersDir, \DIRECTORY_SEPARATOR, hash('xxh128', (string) $type));
+        $generateContent = function () use ($type, $options): string {
+            $this->phpAstBuilder ??= new PhpAstBuilder();
+            $this->phpOptimizer ??= new PhpOptimizer();
+            $this->phpPrinter ??= new Standard(['phpVersion' => PhpVersion::fromComponents(8, 2)]);
 
-        $this->phpAstBuilder ??= new PhpAstBuilder();
-        $this->phpOptimizer ??= new PhpOptimizer();
-        $this->phpPrinter ??= new Standard(['phpVersion' => PhpVersion::fromComponents(8, 2)]);
-        $this->fs ??= new Filesystem();
+            $dataModel = $this->createDataModel($type, new VariableDataAccessor('data'), $options);
+            $nodes = $this->phpAstBuilder->build($dataModel, $options);
+            $nodes = $this->phpOptimizer->optimize($nodes);
 
-        $dataModel = $this->createDataModel($type, new VariableDataAccessor('data'), $options, ['depth' => 0]);
+            return $this->phpPrinter->prettyPrintFile($nodes)."\n";
+        };
 
-        $nodes = $this->phpAstBuilder->build($dataModel, $options);
-        $nodes = $this->phpOptimizer->optimize($nodes);
-
-        $content = $this->phpPrinter->prettyPrintFile($nodes)."\n";
-
-        if (!$this->fs->exists($this->streamWritersDir)) {
-            $this->fs->mkdir($this->streamWritersDir);
-        }
-
-        $tmpFile = $this->fs->tempnam(\dirname($path), basename($path));
-
-        try {
-            $this->fs->dumpFile($tmpFile, $content);
-            $this->fs->rename($tmpFile, $path);
-            $this->fs->chmod($path, 0666 & ~umask());
-        } catch (IOException $e) {
-            throw new RuntimeException(\sprintf('Failed to write "%s" stream writer file.', $path), previous: $e);
-        }
+        $this->dumper->dump($type, $path, $generateContent);
 
         return $path;
-    }
-
-    private function getPath(Type $type): string
-    {
-        return \sprintf('%s%s%s.json.php', $this->streamWritersDir, \DIRECTORY_SEPARATOR, hash('xxh128', (string) $type));
     }
 
     /**
@@ -112,6 +93,7 @@ final class StreamWriterGenerator
     private function createDataModel(Type $type, DataAccessorInterface $accessor, array $options = [], array $context = []): DataModelNodeInterface
     {
         $context['original_type'] ??= $type;
+        $context['depth'] ??= 0;
 
         if ($type instanceof UnionType) {
             return new CompositeNode($accessor, array_map(fn (Type $t): DataModelNodeInterface => $this->createDataModel($t, $accessor, $options, $context), $type->getTypes()));
