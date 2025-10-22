@@ -133,7 +133,7 @@ final class StreamWriterGenerator
             $propertiesNodes = [];
 
             foreach ($propertiesMetadata as $streamedName => $propertyMetadata) {
-                $propertyAccessor = $accessor.'->'.$propertyMetadata->getName();
+                $propertyAccessor = $propertyMetadata->getName() ? $accessor.'->'.$propertyMetadata->getName() : 'null';
 
                 foreach ($propertyMetadata->getNativeToStreamValueTransformer() as $valueTransformer) {
                     if (\is_string($valueTransformer)) {

@@ -22,10 +22,12 @@ use Symfony\Component\JsonStreamer\Mapping\Read\DateTimeTypePropertyMetadataLoad
 use Symfony\Component\JsonStreamer\Read\StreamReaderGenerator;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Enum\DummyBackedEnum;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Enum\DummyEnum;
+use Symfony\Component\JsonStreamer\Tests\Fixtures\Mapping\SyntheticPropertyMetadataLoader;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\ClassicDummy;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithNameAttributes;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithNullableProperties;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithOtherDummies;
+use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithSyntheticProperties;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithUnionProperties;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithValueTransformerAttributes;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\ValueTransformer\DivideStringAndCastToIntValueTransformer;
@@ -53,9 +55,9 @@ class StreamReaderGeneratorTest extends TestCase
     }
 
     #[DataProvider('generatedStreamReaderDataProvider')]
-    public function testGeneratedStreamReader(string $fixture, Type $type)
+    public function testGeneratedStreamReader(string $fixture, Type $type, ?PropertyMetadataLoaderInterface $propertyMetadataLoader = null)
     {
-        $propertyMetadataLoader = new GenericTypePropertyMetadataLoader(
+        $propertyMetadataLoader ??= new GenericTypePropertyMetadataLoader(
             new DateTimeTypePropertyMetadataLoader(new AttributePropertyMetadataLoader(
                 new PropertyMetadataLoader(TypeResolver::create()),
                 new ServiceContainer([
@@ -81,7 +83,7 @@ class StreamReaderGeneratorTest extends TestCase
     }
 
     /**
-     * @return iterable<array{0: string, 1: Type}>
+     * @return iterable<array{0: string, 1: Type, 2?: PropertyMetadataLoaderInterface}>
      */
     public static function generatedStreamReaderDataProvider(): iterable
     {
@@ -107,6 +109,7 @@ class StreamReaderGeneratorTest extends TestCase
         yield ['object_in_object', Type::object(DummyWithOtherDummies::class)];
         yield ['object_with_nullable_properties', Type::object(DummyWithNullableProperties::class)];
         yield ['object_with_value_transformer', Type::object(DummyWithValueTransformerAttributes::class)];
+        yield ['object_with_synthetic_properties', Type::object(DummyWithSyntheticProperties::class), new SyntheticPropertyMetadataLoader()];
 
         yield ['union', Type::union(Type::int(), Type::list(Type::enum(DummyBackedEnum::class)), Type::object(DummyWithNameAttributes::class))];
         yield ['object_with_union', Type::object(DummyWithUnionProperties::class)];

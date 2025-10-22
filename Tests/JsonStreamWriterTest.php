@@ -13,9 +13,11 @@ namespace Symfony\Component\JsonStreamer\Tests;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Psr\Container\ContainerInterface;
 use Symfony\Component\JsonStreamer\Exception\NotEncodableValueException;
 use Symfony\Component\JsonStreamer\JsonStreamWriter;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Enum\DummyBackedEnum;
+use Symfony\Component\JsonStreamer\Tests\Fixtures\Mapping\SyntheticPropertyMetadataLoader;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\ClassicDummy;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithArray;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithDateTimes;
@@ -25,6 +27,7 @@ use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithNameAttributes;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithNestedArray;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithNullableProperties;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithPhpDoc;
+use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithSyntheticProperties;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithUnionProperties;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithValueTransformerAttributes;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\SelfReferencingDummy;
@@ -271,6 +274,13 @@ class JsonStreamWriterTest extends TestCase
     public function testWriteObjectWithDollarNamedProperties()
     {
         $this->assertWritten('{"$foo":true,"{$foo->bar}":true}', new DummyWithDollarNamedProperties(), Type::object(DummyWithDollarNamedProperties::class));
+    }
+
+    public function testWriteObjectWithSyntheticProperty()
+    {
+        $writer = new JsonStreamWriter($this->createMock(ContainerInterface::class), new SyntheticPropertyMetadataLoader(), $this->streamWritersDir);
+
+        $this->assertSame('{"synthetic":true}', (string) $writer->write(new DummyWithSyntheticProperties(), Type::object(DummyWithSyntheticProperties::class)));
     }
 
     #[DataProvider('throwWhenMaxDepthIsReachedDataProvider')]
