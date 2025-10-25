@@ -1,6 +1,11 @@
 CHANGELOG
 =========
 
+8.0
+---
+
+ * Remove `$streamToNativeValueTransformers` from `PropertyMetadata`
+
 7.4
 ---
 
