@@ -40,15 +40,11 @@ final class PropertyMetadata
     }
 
     /**
-     * @param list<string|\Closure> $nativeToStreamValueTransformers
-     * @param list<string|\Closure> $streamToNativeValueTransformers
+     * @param list<string|\Closure> $valueTransformers
      */
-    public static function createSynthetic(
-        Type $type,
-        array $nativeToStreamValueTransformers = [],
-        array $streamToNativeValueTransformers = [],
-    ): self {
-        return new self(null, $type, $nativeToStreamValueTransformers, $streamToNativeValueTransformers);
+    public static function createSynthetic(Type $type, array $valueTransformers = []): self
+    {
+        return new self(null, $type, $valueTransformers);
     }
 
     public function getName(): ?string
