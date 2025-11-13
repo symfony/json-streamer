@@ -46,9 +46,13 @@ final class JsonStreamReader implements StreamReaderInterface
         private ContainerInterface $valueTransformers,
         PropertyMetadataLoaderInterface $propertyMetadataLoader,
         string $streamReadersDir,
+        ConfigCacheFactoryInterface|string|null $configCacheFactory = null,
         ?string $lazyGhostsDir = null,
-        ?ConfigCacheFactoryInterface $configCacheFactory = null,
     ) {
+        if (\is_string($configCacheFactory)) {
+            $lazyGhostsDir = $configCacheFactory;
+            $configCacheFactory = null;
+        }
         $this->streamReaderGenerator = new StreamReaderGenerator($propertyMetadataLoader, $streamReadersDir, $configCacheFactory);
         $this->instantiator = new Instantiator();
         $this->lazyInstantiator = new LazyInstantiator($lazyGhostsDir);
