@@ -11,8 +11,7 @@
 
 namespace Symfony\Component\JsonStreamer\Read;
 
-use Symfony\Component\Filesystem\Exception\IOException;
-use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Component\Config\ConfigCacheFactoryInterface;
 use Symfony\Component\JsonStreamer\DataModel\Read\BackedEnumNode;
 use Symfony\Component\JsonStreamer\DataModel\Read\CollectionNode;
 use Symfony\Component\JsonStreamer\DataModel\Read\CompositeNode;
@@ -22,6 +21,7 @@ use Symfony\Component\JsonStreamer\DataModel\Read\ScalarNode;
 use Symfony\Component\JsonStreamer\Exception\RuntimeException;
 use Symfony\Component\JsonStreamer\Exception\UnsupportedException;
 use Symfony\Component\JsonStreamer\Mapping\PropertyMetadataLoaderInterface;
+use Symfony\Component\JsonStreamer\StreamerDumper;
 use Symfony\Component\TypeInfo\Type;
 use Symfony\Component\TypeInfo\Type\BackedEnumType;
 use Symfony\Component\TypeInfo\Type\BuiltinType;
@@ -40,13 +40,15 @@ use Symfony\Component\TypeInfo\Type\UnionType;
  */
 final class StreamReaderGenerator
 {
+    private StreamerDumper $dumper;
     private ?PhpGenerator $phpGenerator = null;
-    private ?Filesystem $fs = null;
 
     public function __construct(
         private PropertyMetadataLoaderInterface $propertyMetadataLoader,
         private string $streamReadersDir,
+        ?ConfigCacheFactoryInterface $cacheFactory = null,
     ) {
+        $this->dumper = new StreamerDumper($propertyMetadataLoader, $streamReadersDir, $cacheFactory);
     }
 
     /**
@@ -56,37 +58,16 @@ final class StreamReaderGenerator
      */
     public function generate(Type $type, bool $decodeFromStream, array $options = []): string
     {
-        $path = $this->getPath($type, $decodeFromStream);
-        if (is_file($path)) {
-            return $path;
-        }
+        $path = \sprintf('%s%s%s.json%s.php', $this->streamReadersDir, \DIRECTORY_SEPARATOR, hash('xxh128', (string) $type), $decodeFromStream ? '.stream' : '');
+        $generateContent = function () use ($type, $decodeFromStream, $options): string {
+            $this->phpGenerator ??= new PhpGenerator();
 
-        $this->phpGenerator ??= new PhpGenerator();
-        $this->fs ??= new Filesystem();
+            return $this->phpGenerator->generate($this->createDataModel($type, $options), $decodeFromStream, $options);
+        };
 
-        $dataModel = $this->createDataModel($type, $options);
-        $php = $this->phpGenerator->generate($dataModel, $decodeFromStream, $options);
-
-        if (!$this->fs->exists($this->streamReadersDir)) {
-            $this->fs->mkdir($this->streamReadersDir);
-        }
-
-        $tmpFile = $this->fs->tempnam(\dirname($path), basename($path));
-
-        try {
-            $this->fs->dumpFile($tmpFile, $php);
-            $this->fs->rename($tmpFile, $path);
-            $this->fs->chmod($path, 0o666 & ~umask());
-        } catch (IOException $e) {
-            throw new RuntimeException(\sprintf('Failed to write "%s" stream reader file.', $path), previous: $e);
-        }
+        $this->dumper->dump($type, $path, $generateContent);
 
         return $path;
-    }
-
-    private function getPath(Type $type, bool $decodeFromStream): string
-    {
-        return \sprintf('%s%s%s.json%s.php', $this->streamReadersDir, \DIRECTORY_SEPARATOR, hash('xxh128', (string) $type), $decodeFromStream ? '.stream' : '');
     }
 
     /**
