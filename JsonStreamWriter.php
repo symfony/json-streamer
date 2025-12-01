@@ -30,10 +30,12 @@ use Symfony\Component\TypeInfo\TypeResolver\TypeResolver;
 /**
  * @author Mathias Arlaud <mathias.arlaud@gmail.com>
  *
- * @implements StreamWriterInterface<array{
+ * @psalm-type Options = array{
  *     include_null_properties?: bool,
  *     ...<string, mixed>,
- * }>
+ * }
+ *
+ * @implements StreamWriterInterface<Options>
  */
 final class JsonStreamWriter implements StreamWriterInterface
 {
@@ -44,17 +46,22 @@ final class JsonStreamWriter implements StreamWriterInterface
      */
     private array $streamWriters = [];
 
+    /**
+     * @param Options $defaultOptions
+     */
     public function __construct(
         private ContainerInterface $valueTransformers,
         PropertyMetadataLoaderInterface $propertyMetadataLoader,
         string $streamWritersDir,
         ?ConfigCacheFactoryInterface $configCacheFactory = null,
+        private array $defaultOptions = [],
     ) {
         $this->streamWriterGenerator = new StreamWriterGenerator($propertyMetadataLoader, $streamWritersDir, $configCacheFactory);
     }
 
     public function write(mixed $data, Type $type, array $options = []): \Traversable&\Stringable
     {
+        $options += $this->defaultOptions;
         $path = $this->streamWriterGenerator->generate($type, $options);
         $chunks = ($this->streamWriters[$path] ??= require $path)($data, $this->valueTransformers, $options);
 
