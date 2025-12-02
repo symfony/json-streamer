@@ -27,11 +27,15 @@ use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithArray;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithDollarNamedProperties;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithNameAttributes;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithNestedArray;
+use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithNestedDictDummies;
+use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithNestedListDummies;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithOtherDummies;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithSyntheticProperties;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithUnionProperties;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithValueTransformerAttributes;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\SelfReferencingDummy;
+use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\SelfReferencingDummyDict;
+use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\SelfReferencingDummyList;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\ValueTransformer\BooleanToStringValueTransformer;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\ValueTransformer\DoubleIntAndCastToStringValueTransformer;
 use Symfony\Component\JsonStreamer\Tests\ServiceContainer;
@@ -99,6 +103,8 @@ class StreamWriterGeneratorTest extends TestCase
         yield ['nullable_object_list', Type::nullable(Type::list(Type::object(DummyWithNameAttributes::class)))];
         yield ['nested_list', Type::list(Type::object(DummyWithArray::class))];
         yield ['double_nested_list', Type::list(Type::object(DummyWithNestedArray::class))];
+        yield ['object_with_nested_list_self', Type::object(DummyWithNestedListDummies::class)];
+        yield ['object_with_nested_dict_self', Type::object(DummyWithNestedDictDummies::class)];
 
         yield ['dict', Type::dict()];
         yield ['object_dict', Type::dict(Type::object(DummyWithNameAttributes::class))];
@@ -112,6 +118,8 @@ class StreamWriterGeneratorTest extends TestCase
         yield ['object_in_object', Type::object(DummyWithOtherDummies::class)];
         yield ['object_with_value_transformer', Type::object(DummyWithValueTransformerAttributes::class)];
         yield ['self_referencing_object', Type::object(SelfReferencingDummy::class)];
+        yield ['self_referencing_object_list', Type::object(SelfReferencingDummyList::class)];
+        yield ['self_referencing_object_dict', Type::object(SelfReferencingDummyDict::class)];
         yield ['object_with_dollar_named_properties', Type::object(DummyWithDollarNamedProperties::class)];
         yield ['object_with_synthetic_properties', Type::object(DummyWithSyntheticProperties::class), new SyntheticPropertyMetadataLoader()];
 

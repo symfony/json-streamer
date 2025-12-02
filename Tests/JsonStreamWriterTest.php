@@ -25,12 +25,16 @@ use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithDollarNamedProp
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithGenerics;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithNameAttributes;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithNestedArray;
+use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithNestedDictDummies;
+use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithNestedListDummies;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithNullableProperties;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithPhpDoc;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithSyntheticProperties;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithUnionProperties;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithValueTransformerAttributes;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\SelfReferencingDummy;
+use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\SelfReferencingDummyDict;
+use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\SelfReferencingDummyList;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\ValueTransformer\BooleanToStringValueTransformer;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\ValueTransformer\DoubleIntAndCastToStringValueTransformer;
 use Symfony\Component\JsonStreamer\ValueTransformer\DateTimeToStringValueTransformer;
@@ -281,6 +285,56 @@ class JsonStreamWriterTest extends TestCase
         $writer = new JsonStreamWriter($this->createMock(ContainerInterface::class), new SyntheticPropertyMetadataLoader(), $this->streamWritersDir);
 
         $this->assertSame('{"synthetic":true}', (string) $writer->write(new DummyWithSyntheticProperties(), Type::object(DummyWithSyntheticProperties::class)));
+    }
+
+    public function testWriteNestedSelfList()
+    {
+        $dummy = new SelfReferencingDummyList();
+        $dummy->items = [new SelfReferencingDummyList(), new SelfReferencingDummyList(), new SelfReferencingDummyList()];
+
+        $this->assertWritten(
+            '{"items":[{"items":[]},{"items":[]},{"items":[]}]}',
+            $dummy,
+            Type::object(SelfReferencingDummyList::class)
+        );
+
+        $dummy = new DummyWithNestedListDummies();
+        $dummy->dummies = [new DummyWithNestedListDummies(), new DummyWithNestedListDummies(), new DummyWithNestedListDummies()];
+
+        $this->assertWritten(
+            '{"dummies":[{"dummies":[]},{"dummies":[]},{"dummies":[]}]}',
+            $dummy,
+            Type::object(DummyWithNestedListDummies::class)
+        );
+    }
+
+    public function testWriteNestedSelfDict()
+    {
+        $dummy = new SelfReferencingDummyDict();
+        $dummy->items = [
+            'first' => new SelfReferencingDummyDict(),
+            'second' => new SelfReferencingDummyDict(),
+            'third' => new SelfReferencingDummyDict(),
+        ];
+
+        $this->assertWritten(
+            '{"items":{"first":{"items":{}},"second":{"items":{}},"third":{"items":{}}}}',
+            $dummy,
+            Type::object(SelfReferencingDummyDict::class)
+        );
+
+        $dummy = new DummyWithNestedDictDummies();
+        $dummy->dummies = [
+            'first' => new DummyWithNestedDictDummies(),
+            'second' => new DummyWithNestedDictDummies(),
+            'third' => new DummyWithNestedDictDummies(),
+        ];
+
+        $this->assertWritten(
+            '{"dummies":{"first":{"dummies":{}},"second":{"dummies":{}},"third":{"dummies":{}}}}',
+            $dummy,
+            Type::object(DummyWithNestedDictDummies::class)
+        );
     }
 
     #[DataProvider('throwWhenMaxDepthIsReachedDataProvider')]

@@ -241,7 +241,8 @@ final class PhpGenerator
             if (isset($context['generated_generators'][$dataModelNode->getIdentifier()]) || $dataModelNode->isMock()) {
                 $depthArgument = ($context['generating_generator'] ?? false) ? '$depth + 1' : (string) $context['depth'];
 
-                return $this->line('yield from $generators[\''.$dataModelNode->getIdentifier().'\']('.$accessor.', '.$depthArgument.');', $context);
+                return $this->flushYieldBuffer($context)
+                    .$this->line('yield from $generators[\''.$dataModelNode->getIdentifier().'\']('.$accessor.', '.$depthArgument.');', $context);
             }
 
             ++$context['depth'];
