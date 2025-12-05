@@ -323,7 +323,7 @@ class JsonStreamWriterTest extends TestCase
         $dummy->items = [new SelfReferencingDummyList(), new SelfReferencingDummyList(), new SelfReferencingDummyList()];
 
         $this->assertWritten(
-            '{"items":[{"items":[]},{"items":[]},{"items":[]}]}',
+            '{"items":{"0":{"items":{}},"1":{"items":{}},"2":{"items":{}}}}',
             $dummy,
             Type::object(SelfReferencingDummyList::class)
         );
@@ -332,7 +332,7 @@ class JsonStreamWriterTest extends TestCase
         $dummy->dummies = [new DummyWithNestedListDummies(), new DummyWithNestedListDummies(), new DummyWithNestedListDummies()];
 
         $this->assertWritten(
-            '{"dummies":[{"dummies":[]},{"dummies":[]},{"dummies":[]}]}',
+            '{"dummies":{"0":{"dummies":{}},"1":{"dummies":{}},"2":{"dummies":{}}}}',
             $dummy,
             Type::object(DummyWithNestedListDummies::class)
         );
