@@ -10,14 +10,15 @@ return static function (mixed $data, \Psr\Container\ContainerInterface $valueTra
         }
         $prefix1 = '';
         yield "{{$prefix1}\"dummies\":";
-        yield "[";
+        yield "{";
         $prefix2 = '';
-        foreach ($data->dummies as $value1) {
-            yield "{$prefix2}";
+        foreach ($data->dummies as $key1 => $value1) {
+            $key1 = is_int($key1) ? $key1 : \substr(\json_encode($key1), 1, -1);
+            yield "{$prefix2}\"{$key1}\":";
             yield from $generators['Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithNestedListDummies']($value1, $depth + 1);
             $prefix2 = ',';
         }
-        yield "]}";
+        yield "}}";
     };
     try {
         yield from $generators['Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithNestedListDummies']($data, 0);

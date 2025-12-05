@@ -71,6 +71,20 @@ class StreamReaderGeneratorTest extends TestCase
 
         $generator = new StreamReaderGenerator($propertyMetadataLoader, $this->streamReadersDir);
 
+        if ($_ENV['TEST_GENERATE_FIXTURES'] ?? false) {
+            file_put_contents(
+                \sprintf('%s/Fixtures/stream_reader/%s.php', \dirname(__DIR__), $fixture),
+                file_get_contents($generator->generate($type, false)),
+            );
+
+            file_put_contents(
+                \sprintf('%s/Fixtures/stream_reader/%s.stream.php', \dirname(__DIR__), $fixture),
+                file_get_contents($generator->generate($type, true)),
+            );
+
+            $this->markTestIncomplete('TEST_GENERATE_FIXTURES is set');
+        }
+
         $this->assertStringEqualsFile(
             \sprintf('%s/Fixtures/stream_reader/%s.php', \dirname(__DIR__), $fixture),
             file_get_contents($generator->generate($type, false)),

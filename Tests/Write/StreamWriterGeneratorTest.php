@@ -80,6 +80,14 @@ class StreamWriterGeneratorTest extends TestCase
 
         $generator = new StreamWriterGenerator($propertyMetadataLoader, $this->streamWritersDir);
 
+        if ($_ENV['TEST_GENERATE_FIXTURES'] ?? false) {
+            file_put_contents(
+                \sprintf('%s/Fixtures/stream_writer/%s.php', \dirname(__DIR__), $fixture),
+                file_get_contents($generator->generate($type)),
+            );
+            $this->markTestIncomplete('TEST_GENERATE_FIXTURES is set');
+        }
+
         $this->assertStringEqualsFile(
             \sprintf('%s/Fixtures/stream_writer/%s.php', \dirname(__DIR__), $fixture),
             file_get_contents($generator->generate($type)),
