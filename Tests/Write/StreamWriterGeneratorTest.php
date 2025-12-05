@@ -24,10 +24,12 @@ use Symfony\Component\JsonStreamer\Tests\Fixtures\Enum\DummyEnum;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Mapping\SyntheticPropertyMetadataLoader;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\ClassicDummy;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithArray;
+use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithList;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithDollarNamedProperties;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithNameAttributes;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithNestedArray;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithNestedDictDummies;
+use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithNestedList;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithNestedListDummies;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithOtherDummies;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithSyntheticProperties;
@@ -101,10 +103,13 @@ class StreamWriterGeneratorTest extends TestCase
         yield ['null_list', Type::list(Type::null())];
         yield ['object_list', Type::list(Type::object(DummyWithNameAttributes::class))];
         yield ['nullable_object_list', Type::nullable(Type::list(Type::object(DummyWithNameAttributes::class)))];
-        yield ['nested_list', Type::list(Type::object(DummyWithArray::class))];
-        yield ['double_nested_list', Type::list(Type::object(DummyWithNestedArray::class))];
+        yield ['nested_list', Type::list(Type::object(DummyWithList::class))];
+        yield ['double_nested_list', Type::list(Type::object(DummyWithNestedList::class))];
         yield ['object_with_nested_list_self', Type::object(DummyWithNestedListDummies::class)];
         yield ['object_with_nested_dict_self', Type::object(DummyWithNestedDictDummies::class)];
+
+        yield ['nested_array', Type::list(Type::object(DummyWithArray::class))];
+        yield ['double_nested_array', Type::list(Type::object(DummyWithNestedArray::class))];
 
         yield ['dict', Type::dict()];
         yield ['object_dict', Type::dict(Type::object(DummyWithNameAttributes::class))];
