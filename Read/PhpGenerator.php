@@ -58,7 +58,7 @@ final class PhpGenerator
                 .$providers
                 .($this->canBeDecodedWithJsonDecode($dataModel, $decodeFromStream)
                     ? $this->line('    return \\'.Decoder::class.'::decodeStream($stream, 0, null);', $context)
-                    : $this->line('    return $providers[\''.$dataModel->getIdentifier().'\']($stream, 0, null);', $context))
+                    : $this->line('    return $providers['.$this->quote($dataModel->getIdentifier()).']($stream, 0, null);', $context))
                 .$this->line('};', $context);
         }
 
@@ -71,7 +71,7 @@ final class PhpGenerator
             .$providers
             .($this->canBeDecodedWithJsonDecode($dataModel, $decodeFromStream)
                 ? $this->line('    return \\'.Decoder::class.'::decodeString((string) $string);', $context)
-                : $this->line('    return $providers[\''.$dataModel->getIdentifier().'\'](\\'.Decoder::class.'::decodeString((string) $string));', $context))
+                : $this->line('    return $providers['.$this->quote($dataModel->getIdentifier()).'](\\'.Decoder::class.'::decodeString((string) $string));', $context))
             .$this->line('};', $context);
     }
 
@@ -94,7 +94,7 @@ final class PhpGenerator
             $accessor = $decodeFromStream ? '\\'.Decoder::class.'::decodeStream($stream, $offset, $length)' : '$data';
             $arguments = $decodeFromStream ? '$stream, $offset, $length' : '$data';
 
-            return $this->line("\$providers['".$node->getIdentifier()."'] = static function ($arguments) {", $context)
+            return $this->line('$providers['.$this->quote($node->getIdentifier())."] = static function ($arguments) {", $context)
                 .$this->line('    return '.$this->generateValueFormat($node, $accessor).';', $context)
                 .$this->line('};', $context);
         }
@@ -109,20 +109,20 @@ final class PhpGenerator
 
             $arguments = $decodeFromStream ? '$stream, $offset, $length' : '$data';
 
-            $php .= $this->line("\$providers['".$node->getIdentifier()."'] = static function ($arguments) use (\$options, \$valueTransformers, \$instantiator, &\$providers) {", $context);
+            $php .= $this->line('$providers['.$this->quote($node->getIdentifier())."] = static function ($arguments) use (\$options, \$valueTransformers, \$instantiator, &\$providers) {", $context);
 
             ++$context['indentation_level'];
 
             $php .= $decodeFromStream ? $this->line('$data = \\'.Decoder::class.'::decodeStream($stream, $offset, $length);', $context) : '';
 
             foreach ($node->getNodes() as $n) {
-                $value = $this->canBeDecodedWithJsonDecode($n, $decodeFromStream) ? $this->generateValueFormat($n, '$data') : '$providers[\''.$n->getIdentifier().'\']($data)';
+                $value = $this->canBeDecodedWithJsonDecode($n, $decodeFromStream) ? $this->generateValueFormat($n, '$data') : '$providers['.$this->quote($n->getIdentifier()).']($data)';
                 $php .= $this->line('if ('.$this->generateCompositeNodeItemCondition($n, '$data').') {', $context)
                     .$this->line("    return $value;", $context)
                     .$this->line('}', $context);
             }
 
-            $php .= $this->line('throw new \\'.UnexpectedValueException::class.'(\\sprintf(\'Unexpected "%s" value for "'.$node->getIdentifier().'".\', \\get_debug_type($data)));', $context);
+            $php .= $this->line('throw new \\'.UnexpectedValueException::class.'(\\sprintf(\'Unexpected "%s" value for "%s".\', \\get_debug_type($data), '.$this->quote($node->getIdentifier()).'));', $context);
 
             --$context['indentation_level'];
 
@@ -132,7 +132,7 @@ final class PhpGenerator
         if ($node instanceof CollectionNode) {
             $arguments = $decodeFromStream ? '$stream, $offset, $length' : '$data';
 
-            $php = $this->line("\$providers['".$node->getIdentifier()."'] = static function ($arguments) use (\$options, \$valueTransformers, \$instantiator, &\$providers) {", $context);
+            $php = $this->line('$providers['.$this->quote($node->getIdentifier())."] = static function ($arguments) use (\$options, \$valueTransformers, \$instantiator, &\$providers) {", $context);
 
             ++$context['indentation_level'];
 
@@ -146,11 +146,11 @@ final class PhpGenerator
             if ($decodeFromStream) {
                 $php .= $this->canBeDecodedWithJsonDecode($node->getItemNode(), $decodeFromStream)
                     ? $this->line('        yield $k => '.$this->generateValueFormat($node->getItemNode(), '\\'.Decoder::class.'::decodeStream($stream, $v[0], $v[1]);'), $context)
-                    : $this->line('        yield $k => $providers[\''.$node->getItemNode()->getIdentifier().'\']($stream, $v[0], $v[1]);', $context);
+                    : $this->line('        yield $k => $providers['.$this->quote($node->getItemNode()->getIdentifier()).']($stream, $v[0], $v[1]);', $context);
             } else {
                 $php .= $this->canBeDecodedWithJsonDecode($node->getItemNode(), $decodeFromStream)
                     ? $this->line('        yield $k => $v;', $context)
-                    : $this->line('        yield $k => $providers[\''.$node->getItemNode()->getIdentifier().'\']($v);', $context);
+                    : $this->line('        yield $k => $providers['.$this->quote($node->getItemNode()->getIdentifier()).']($v);', $context);
             }
 
             $php .= $this->line('    }', $context)
@@ -175,7 +175,7 @@ final class PhpGenerator
 
             $arguments = $decodeFromStream ? '$stream, $offset, $length' : '$data';
 
-            $php = $this->line("\$providers['".$node->getIdentifier()."'] = static function ($arguments) use (\$options, \$valueTransformers, \$instantiator, &\$providers) {", $context);
+            $php = $this->line('$providers['.$this->quote($node->getIdentifier())."] = static function ($arguments) use (\$options, \$valueTransformers, \$instantiator, &\$providers) {", $context);
 
             ++$context['indentation_level'];
 
@@ -189,7 +189,7 @@ final class PhpGenerator
                 foreach ($node->getProperties() as $streamedName => $property) {
                     $propertyValuePhp = $this->canBeDecodedWithJsonDecode($property['value'], $decodeFromStream)
                         ? $this->generateValueFormat($property['value'], '\\'.Decoder::class.'::decodeStream($stream, $v[0], $v[1])')
-                        : '$providers[\''.$property['value']->getIdentifier().'\']($stream, $v[0], $v[1])';
+                        : '$providers['.$this->quote($property['value']->getIdentifier()).']($stream, $v[0], $v[1])';
 
                     $php .= $this->line("            '$streamedName' => \$object->".$property['name'].' = '.$property['accessor']($propertyValuePhp).',', $context);
                 }
@@ -204,7 +204,7 @@ final class PhpGenerator
                 foreach ($node->getProperties() as $streamedName => $property) {
                     $propertyValuePhp = $this->canBeDecodedWithJsonDecode($property['value'], $decodeFromStream)
                         ? "\$data['$streamedName'] ?? '_symfony_missing_value'"
-                        : "\\array_key_exists('$streamedName', \$data) ? \$providers['".$property['value']->getIdentifier()."'](\$data['$streamedName']) : '_symfony_missing_value'";
+                        : "\\array_key_exists('$streamedName', \$data) ? \$providers[".$this->quote($property['value']->getIdentifier())."](\$data['$streamedName']) : '_symfony_missing_value'";
                     $propertiesValuePhp .= "$separator'".$property['name']."' => ".$property['accessor']($propertyValuePhp);
                     $separator = ', ';
                 }
@@ -303,6 +303,11 @@ final class PhpGenerator
     private function line(string $line, array $context): string
     {
         return str_repeat('    ', $context['indentation_level']).$line."\n";
+    }
+
+    private function quote(string $identifier): string
+    {
+        return \sprintf("'%s'", addcslashes($identifier, "'"));
     }
 
     /**
