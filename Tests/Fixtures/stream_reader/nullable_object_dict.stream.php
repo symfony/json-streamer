@@ -33,7 +33,7 @@ return static function (mixed $stream, \Psr\Container\ContainerInterface $valueT
         if (null === $data) {
             return null;
         }
-        throw new \Symfony\Component\JsonStreamer\Exception\UnexpectedValueException(\sprintf('Unexpected "%s" value for "array<string, Symfony\Component\JsonStreamer\Tests\Fixtures\Model\ClassicDummy>|null".', \get_debug_type($data)));
+        throw new \Symfony\Component\JsonStreamer\Exception\UnexpectedValueException(\sprintf('Unexpected "%s" value for "%s".', \get_debug_type($data), 'array<string, Symfony\Component\JsonStreamer\Tests\Fixtures\Model\ClassicDummy>|null'));
     };
     return $providers['array<string, Symfony\Component\JsonStreamer\Tests\Fixtures\Model\ClassicDummy>|null']($stream, 0, null);
 };
