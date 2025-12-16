@@ -53,7 +53,7 @@ final class CompositeNode implements DataModelNodeInterface
             }
         }
 
-        usort($nodes, fn (CollectionNode|ObjectNode|BackedEnumNode|ScalarNode $a, CollectionNode|ObjectNode|BackedEnumNode|ScalarNode $b): int => self::NODE_PRECISION[$b::class] <=> self::NODE_PRECISION[$a::class]);
+        usort($nodes, static fn (CollectionNode|ObjectNode|BackedEnumNode|ScalarNode $a, CollectionNode|ObjectNode|BackedEnumNode|ScalarNode $b): int => self::NODE_PRECISION[$b::class] <=> self::NODE_PRECISION[$a::class]);
         $this->nodes = $nodes;
     }
 
@@ -64,7 +64,7 @@ final class CompositeNode implements DataModelNodeInterface
 
     public function getType(): UnionType
     {
-        return Type::union(...array_map(fn (DataModelNodeInterface $n): Type => $n->getType(), $this->nodes));
+        return Type::union(...array_map(static fn (DataModelNodeInterface $n): Type => $n->getType(), $this->nodes));
     }
 
     /**

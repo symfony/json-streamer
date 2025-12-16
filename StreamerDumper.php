@@ -50,7 +50,7 @@ final class StreamerDumper
                     $resourceClasses = $this->getResourceClassNames($type);
                     $cache->write(
                         $generateContent(),
-                        array_map(fn (string $c) => new ReflectionClassResource(new \ReflectionClass($c)), $resourceClasses),
+                        array_map(static fn (string $c) => new ReflectionClassResource(new \ReflectionClass($c)), $resourceClasses),
                     );
                 },
             );

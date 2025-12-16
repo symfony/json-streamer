@@ -19,7 +19,7 @@ class LazyInstantiatorTest extends TestCase
 {
     public function testCreateLazyGhostUsingPhp()
     {
-        $ghost = (new LazyInstantiator())->instantiate(ClassicDummy::class, function (ClassicDummy $object): void {
+        $ghost = (new LazyInstantiator())->instantiate(ClassicDummy::class, static function (ClassicDummy $object): void {
             $object->id = 123;
         });
 
