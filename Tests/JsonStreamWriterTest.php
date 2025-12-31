@@ -13,7 +13,7 @@ namespace Symfony\Component\JsonStreamer\Tests;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
+use Symfony\Component\DependencyInjection\Container;
 use Symfony\Component\JsonStreamer\Exception\NotEncodableValueException;
 use Symfony\Component\JsonStreamer\JsonStreamWriter;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Enum\DummyBackedEnum;
@@ -312,7 +312,7 @@ class JsonStreamWriterTest extends TestCase
 
     public function testWriteObjectWithSyntheticProperty()
     {
-        $writer = new JsonStreamWriter($this->createMock(ContainerInterface::class), new SyntheticPropertyMetadataLoader(), $this->streamWritersDir);
+        $writer = new JsonStreamWriter(new Container(), new SyntheticPropertyMetadataLoader(), $this->streamWritersDir);
 
         $this->assertSame('{"synthetic":true}', (string) $writer->write(new DummyWithSyntheticProperties(), Type::object(DummyWithSyntheticProperties::class)));
     }
