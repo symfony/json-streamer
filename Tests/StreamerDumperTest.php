@@ -46,7 +46,7 @@ class StreamerDumperTest extends TestCase
     {
         $path = $this->cacheDir.'/streamer.php';
 
-        $dumper = new StreamerDumper($this->createMock(PropertyMetadataLoaderInterface::class), $this->cacheDir, new ConfigCacheFactory(true));
+        $dumper = new StreamerDumper($this->createStub(PropertyMetadataLoaderInterface::class), $this->cacheDir, new ConfigCacheFactory(true));
         $dumper->dump(Type::int(), $path, fn () => 'CONTENT');
 
         $this->assertFileExists($path);
@@ -60,7 +60,7 @@ class StreamerDumperTest extends TestCase
     {
         $path = $this->cacheDir.'/streamer.php';
 
-        $dumper = new StreamerDumper($this->createMock(PropertyMetadataLoaderInterface::class), $this->cacheDir);
+        $dumper = new StreamerDumper($this->createStub(PropertyMetadataLoaderInterface::class), $this->cacheDir);
         $dumper->dump(Type::int(), $path, fn () => 'CONTENT');
 
         $this->assertFileExists($path);
