@@ -42,6 +42,11 @@ final class JsonStreamReader implements StreamReaderInterface
     private Instantiator $instantiator;
     private LazyInstantiator $lazyInstantiator;
 
+    /**
+     * @var array<string, callable>
+     */
+    private array $streamReaders = [];
+
     public function __construct(
         private ContainerInterface $valueTransformers,
         PropertyMetadataLoaderInterface $propertyMetadataLoader,
@@ -63,7 +68,7 @@ final class JsonStreamReader implements StreamReaderInterface
         $isStream = \is_resource($input);
         $path = $this->streamReaderGenerator->generate($type, $isStream, $options);
 
-        return (require $path)($input, $this->valueTransformers, $isStream ? $this->lazyInstantiator : $this->instantiator, $options);
+        return ($this->streamReaders[$path] ??= require $path)($input, $this->valueTransformers, $isStream ? $this->lazyInstantiator : $this->instantiator, $options);
     }
 
     /**

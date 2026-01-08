@@ -38,6 +38,11 @@ final class JsonStreamWriter implements StreamWriterInterface
 {
     private StreamWriterGenerator $streamWriterGenerator;
 
+    /**
+     * @var array<string, callable>
+     */
+    private array $streamWriters = [];
+
     public function __construct(
         private ContainerInterface $valueTransformers,
         PropertyMetadataLoaderInterface $propertyMetadataLoader,
@@ -50,7 +55,7 @@ final class JsonStreamWriter implements StreamWriterInterface
     public function write(mixed $data, Type $type, array $options = []): \Traversable&\Stringable
     {
         $path = $this->streamWriterGenerator->generate($type, $options);
-        $chunks = (require $path)($data, $this->valueTransformers, $options);
+        $chunks = ($this->streamWriters[$path] ??= require $path)($data, $this->valueTransformers, $options);
 
         return new
         /**
