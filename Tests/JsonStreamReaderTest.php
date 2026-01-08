@@ -12,7 +12,7 @@
 namespace Symfony\Component\JsonStreamer\Tests;
 
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
+use Symfony\Component\DependencyInjection\Container;
 use Symfony\Component\JsonStreamer\JsonStreamReader;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Enum\DummyBackedEnum;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Mapping\SyntheticPropertyMetadataLoader;
@@ -173,7 +173,7 @@ class JsonStreamReaderTest extends TestCase
 
     public function testReadObjectWithSyntheticProperties()
     {
-        $reader = new JsonStreamReader($this->createMock(ContainerInterface::class), new SyntheticPropertyMetadataLoader(), $this->streamReadersDir);
+        $reader = new JsonStreamReader(new Container(), new SyntheticPropertyMetadataLoader(), $this->streamReadersDir);
 
         $this->assertRead($reader, function (mixed $read) {
             $this->assertInstanceOf(DummyWithSyntheticProperties::class, $read);
