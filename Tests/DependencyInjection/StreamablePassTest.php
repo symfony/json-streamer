@@ -25,7 +25,7 @@ class StreamablePassTest extends TestCase
         $container->register('json_streamer.stream_writer');
         $container->register('.json_streamer.cache_warmer.streamer')->setArguments([null]);
 
-        $container->register('streamable')->setClass('Foo')->addTag('json_streamer.streamable', ['object' => true, 'list' => true])->addTag('container.excluded');
+        $container->register('streamable')->setClass('Foo')->addResourceTag('json_streamer.streamable', ['object' => true, 'list' => true]);
         $container->register('notStreamable')->setClass('Baz');
 
         $pass = new StreamablePass();
