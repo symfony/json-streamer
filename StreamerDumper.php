@@ -70,12 +70,12 @@ final class StreamerDumper
     }
 
     /**
-     * Retrieves resources class names required for caching based on the provided type.
+     * Retrieves resource class names required for caching based on the provided type.
      *
-     * @param list<class-string>   $classNames
-     * @param array<string, mixed> $context
+     * @param array<class-string, class-string> $classNames
+     * @param array<string, mixed>              $context
      *
-     * @return list<class-string>
+     * @return array<class-string, class-string>
      */
     private function getResourceClassNames(Type $type, array $classNames = [], array $context = []): array
     {
@@ -83,24 +83,24 @@ final class StreamerDumper
 
         foreach ($type->traverse() as $t) {
             if ($t instanceof ObjectType) {
-                if (\in_array($t->getClassName(), $classNames, true)) {
-                    return $classNames;
+                if (isset($classNames[$className = $t->getClassName()])) {
+                    continue;
                 }
 
-                $classNames[] = $t->getClassName();
+                $classNames[$className] = $className;
 
-                foreach ($this->propertyMetadataLoader->load($t->getClassName(), [], $context) as $property) {
-                    $classNames = [...$classNames, ...$this->getResourceClassNames($property->getType(), $classNames)];
+                foreach ($this->propertyMetadataLoader->load($className, [], $context) as $property) {
+                    $classNames += $this->getResourceClassNames($property->getType(), $classNames, $context);
                 }
             }
 
             if ($t instanceof GenericType) {
                 foreach ($t->getVariableTypes() as $variableType) {
-                    $classNames = [...$classNames, ...$this->getResourceClassNames($variableType, $classNames)];
+                    $classNames += $this->getResourceClassNames($variableType, $classNames, $context);
                 }
             }
         }
 
-        return array_values(array_unique($classNames));
+        return $classNames;
     }
 }

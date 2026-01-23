@@ -21,6 +21,7 @@ use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\ClassicDummy;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithArray;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithNameAttributes;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithOtherDummies;
+use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithRepeatedOtherDummy;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\SelfReferencingDummy;
 use Symfony\Component\TypeInfo\Type;
 use Symfony\Component\TypeInfo\TypeResolver\TypeResolver;
@@ -111,6 +112,10 @@ class StreamerDumperTest extends TestCase
         yield 'object with object properties' => [
             Type::object(DummyWithOtherDummies::class),
             [DummyWithOtherDummies::class, DummyWithNameAttributes::class, ClassicDummy::class],
+        ];
+        yield 'object with repeated object properties' => [
+            Type::object(DummyWithRepeatedOtherDummy::class),
+            [DummyWithRepeatedOtherDummy::class, ClassicDummy::class],
         ];
         yield 'object with self reference' => [Type::object(SelfReferencingDummy::class), [SelfReferencingDummy::class]];
     }
