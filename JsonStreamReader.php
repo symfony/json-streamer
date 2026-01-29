@@ -32,7 +32,9 @@ use Symfony\Component\TypeInfo\TypeResolver\TypeResolver;
 /**
  * @author Mathias Arlaud <mathias.arlaud@gmail.com>
  *
- * @implements StreamReaderInterface<array<string, mixed>>
+ * @psalm-type Options = array<string, mixed>
+ *
+ * @implements StreamReaderInterface<Options>
  */
 final class JsonStreamReader implements StreamReaderInterface
 {
@@ -45,11 +47,15 @@ final class JsonStreamReader implements StreamReaderInterface
      */
     private array $streamReaders = [];
 
+    /**
+     * @param Options $defaultOptions
+     */
     public function __construct(
         private ContainerInterface $valueTransformers,
         PropertyMetadataLoaderInterface $propertyMetadataLoader,
         string $streamReadersDir,
         ?ConfigCacheFactoryInterface $configCacheFactory = null,
+        private array $defaultOptions = [],
     ) {
         $this->streamReaderGenerator = new StreamReaderGenerator($propertyMetadataLoader, $streamReadersDir, $configCacheFactory);
         $this->instantiator = new Instantiator();
@@ -58,6 +64,7 @@ final class JsonStreamReader implements StreamReaderInterface
 
     public function read($input, Type $type, array $options = []): mixed
     {
+        $options += $this->defaultOptions;
         $isStream = \is_resource($input);
         $path = $this->streamReaderGenerator->generate($type, $isStream, $options);
 

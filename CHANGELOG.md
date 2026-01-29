@@ -1,6 +1,11 @@
 CHANGELOG
 =========
 
+8.1
+---
+
+ * Add `$defaultOptions` to `JsonStreamReader` and `JsonStreamWriter`
+
 8.0
 ---
 
