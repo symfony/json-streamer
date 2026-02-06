@@ -16,6 +16,7 @@ use Symfony\Component\JsonStreamer\DataModel\Write\BackedEnumNode;
 use Symfony\Component\JsonStreamer\DataModel\Write\CollectionNode;
 use Symfony\Component\JsonStreamer\DataModel\Write\CompositeNode;
 use Symfony\Component\JsonStreamer\DataModel\Write\DataModelNodeInterface;
+use Symfony\Component\JsonStreamer\DataModel\Write\DateTimeNode;
 use Symfony\Component\JsonStreamer\DataModel\Write\ObjectNode;
 use Symfony\Component\JsonStreamer\DataModel\Write\ScalarNode;
 use Symfony\Component\JsonStreamer\Exception\LogicException;
@@ -168,6 +169,10 @@ final class PhpGenerator
 
         if ($dataModelNode instanceof BackedEnumNode) {
             return $this->yield($this->encode("{$accessor}->value", $context), $context);
+        }
+
+        if ($dataModelNode instanceof DateTimeNode) {
+            return $this->yield($this->encode("\$valueTransformers->get('json_streamer.value_transformer.date_time_to_string')->transform({$accessor}, \$options)", $context), $context);
         }
 
         if ($dataModelNode instanceof CompositeNode) {

@@ -16,8 +16,10 @@ use Symfony\Component\JsonStreamer\DataModel\Read\BackedEnumNode;
 use Symfony\Component\JsonStreamer\DataModel\Read\CollectionNode;
 use Symfony\Component\JsonStreamer\DataModel\Read\CompositeNode;
 use Symfony\Component\JsonStreamer\DataModel\Read\DataModelNodeInterface;
+use Symfony\Component\JsonStreamer\DataModel\Read\DateTimeNode;
 use Symfony\Component\JsonStreamer\DataModel\Read\ObjectNode;
 use Symfony\Component\JsonStreamer\DataModel\Read\ScalarNode;
+use Symfony\Component\JsonStreamer\Exception\InvalidArgumentException;
 use Symfony\Component\JsonStreamer\Exception\RuntimeException;
 use Symfony\Component\JsonStreamer\Exception\UnsupportedException;
 use Symfony\Component\JsonStreamer\Mapping\PropertyMetadataLoaderInterface;
@@ -92,6 +94,14 @@ final class StreamReaderGenerator
 
         if ($type instanceof GenericType) {
             $type = $type->getWrappedType();
+        }
+
+        if ($type instanceof ObjectType && is_a($type->getClassName(), \DateTimeInterface::class, true)) {
+            if (is_a($type->getClassName(), \DateTime::class, true)) {
+                throw new InvalidArgumentException('The "DateTime" class is not supported. Use "DateTimeImmutable" instead.');
+            }
+
+            return new DateTimeNode($type);
         }
 
         if ($type instanceof ObjectType && !$type instanceof EnumType) {

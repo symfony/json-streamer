@@ -168,7 +168,28 @@ class JsonStreamReaderTest extends TestCase
             $this->assertInstanceOf(DummyWithDateTimes::class, $read);
             $this->assertEquals(new \DateTimeImmutable('2024-11-20'), $read->interface);
             $this->assertEquals(new \DateTimeImmutable('2025-11-20'), $read->immutable);
-        }, '{"interface":"2024-11-20","immutable":"2025-11-20"}', Type::object(DummyWithDateTimes::class));
+            $this->assertEquals(new \DateTimeImmutable('2026-11-20'), $read->union);
+        }, '{"interface":"2024-11-20","immutable":"2025-11-20","union":"2026-11-20"}', Type::object(DummyWithDateTimes::class));
+
+        $this->assertRead($reader, function (mixed $read) {
+            $this->assertInstanceOf(DummyWithDateTimes::class, $read);
+            $this->assertEquals(new \DateTimeImmutable('2024-11-20'), $read->interface);
+            $this->assertEquals(new \DateTimeImmutable('2025-11-20'), $read->immutable);
+            $this->assertEquals(10, $read->union);
+        }, '{"interface":"2024-11-20","immutable":"2025-11-20","union":10}', Type::object(DummyWithDateTimes::class));
+    }
+
+    public function testReadUnion()
+    {
+        $reader = JsonStreamReader::create(streamReadersDir: $this->streamReadersDir, lazyGhostsDir: $this->lazyGhostsDir);
+
+        $this->assertRead($reader, function (mixed $read) {
+            $this->assertInstanceOf(DummyWithNameAttributes::class, $read);
+            $this->assertSame(10, $read->id);
+            $this->assertSame('dummy', $read->name);
+        }, '{"@id": 10, "name": "dummy"}', Type::union(Type::int(), Type::list(Type::enum(DummyBackedEnum::class)), Type::object(DummyWithNameAttributes::class)));
+
+        $this->assertRead($reader, [DummyBackedEnum::ONE, DummyBackedEnum::TWO], '[1, 2]', Type::union(Type::int(), Type::list(Type::enum(DummyBackedEnum::class)), Type::object(DummyWithNameAttributes::class)));
     }
 
     public function testReadObjectWithSyntheticProperties()
