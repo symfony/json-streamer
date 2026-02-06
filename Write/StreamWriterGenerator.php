@@ -16,6 +16,7 @@ use Symfony\Component\JsonStreamer\DataModel\Write\BackedEnumNode;
 use Symfony\Component\JsonStreamer\DataModel\Write\CollectionNode;
 use Symfony\Component\JsonStreamer\DataModel\Write\CompositeNode;
 use Symfony\Component\JsonStreamer\DataModel\Write\DataModelNodeInterface;
+use Symfony\Component\JsonStreamer\DataModel\Write\DateTimeNode;
 use Symfony\Component\JsonStreamer\DataModel\Write\ObjectNode;
 use Symfony\Component\JsonStreamer\DataModel\Write\ScalarNode;
 use Symfony\Component\JsonStreamer\Exception\RuntimeException;
@@ -93,6 +94,10 @@ final class StreamWriterGenerator
 
         if ($type instanceof GenericType) {
             $type = $type->getWrappedType();
+        }
+
+        if ($type instanceof ObjectType && is_a($type->getClassName(), \DateTimeInterface::class, true)) {
+            return new DateTimeNode($accessor, $type);
         }
 
         if ($type instanceof ObjectType && !$type instanceof EnumType) {
