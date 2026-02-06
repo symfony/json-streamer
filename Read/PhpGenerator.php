@@ -116,7 +116,7 @@ final class PhpGenerator
             $php .= $decodeFromStream ? $this->line('$data = \\'.Decoder::class.'::decodeStream($stream, $offset, $length);', $context) : '';
 
             foreach ($node->getNodes() as $n) {
-                $value = $this->canBeDecodedWithJsonDecode($n, $decodeFromStream) ? $this->generateValueFormat($n, '$data') : '$providers['.$this->quote($n->getIdentifier()).']($data)';
+                $value = $this->canBeDecodedWithJsonDecode($n, $decodeFromStream) ? $this->generateValueFormat($n, '$data') : '$providers['.$this->quote($n->getIdentifier())."]($arguments)";
                 $php .= $this->line('if ('.$this->generateCompositeNodeItemCondition($n, '$data').') {', $context)
                     .$this->line("    return $value;", $context)
                     .$this->line('}', $context);

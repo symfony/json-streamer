@@ -179,6 +179,19 @@ class JsonStreamReaderTest extends TestCase
         }, '{"interface":"2024-11-20","immutable":"2025-11-20"}', Type::object(DummyWithDateTimes::class));
     }
 
+    public function testReadUnion()
+    {
+        $reader = JsonStreamReader::create(streamReadersDir: $this->streamReadersDir, lazyGhostsDir: $this->lazyGhostsDir);
+
+        $this->assertRead($reader, function (mixed $read) {
+            $this->assertInstanceOf(DummyWithNameAttributes::class, $read);
+            $this->assertSame(10, $read->id);
+            $this->assertSame('dummy', $read->name);
+        }, '{"@id": 10, "name": "dummy"}', Type::union(Type::int(), Type::list(Type::enum(DummyBackedEnum::class)), Type::object(DummyWithNameAttributes::class)));
+
+        $this->assertRead($reader, [DummyBackedEnum::ONE, DummyBackedEnum::TWO], '[1, 2]', Type::union(Type::int(), Type::list(Type::enum(DummyBackedEnum::class)), Type::object(DummyWithNameAttributes::class)));
+    }
+
     public function testReadObjectWithSyntheticProperties()
     {
         $reader = new JsonStreamReader(new Container(), new SyntheticPropertyMetadataLoader(), $this->streamReadersDir, $this->lazyGhostsDir);
