@@ -16,6 +16,7 @@ use Symfony\Component\JsonStreamer\DataModel\Read\BackedEnumNode;
 use Symfony\Component\JsonStreamer\DataModel\Read\CollectionNode;
 use Symfony\Component\JsonStreamer\DataModel\Read\CompositeNode;
 use Symfony\Component\JsonStreamer\DataModel\Read\DataModelNodeInterface;
+use Symfony\Component\JsonStreamer\DataModel\Read\DateTimeNode;
 use Symfony\Component\JsonStreamer\DataModel\Read\ObjectNode;
 use Symfony\Component\JsonStreamer\DataModel\Read\ScalarNode;
 use Symfony\Component\JsonStreamer\Exception\LogicException;
@@ -95,6 +96,15 @@ final class PhpGenerator
             $arguments = $decodeFromStream ? '$stream, $offset, $length' : '$data';
 
             return $this->line('$providers['.$this->quote($node->getIdentifier())."] = static function ($arguments) {", $context)
+                .$this->line('    return '.$this->generateValueFormat($node, $accessor).';', $context)
+                .$this->line('};', $context);
+        }
+
+        if ($node instanceof DateTimeNode) {
+            $accessor = $decodeFromStream ? '\\'.Decoder::class.'::decodeStream($stream, $offset, $length)' : '$data';
+            $arguments = $decodeFromStream ? '$stream, $offset, $length' : '$data';
+
+            return $this->line('$providers['.$this->quote($node->getIdentifier())."] = static function ($arguments) use (\$valueTransformers, \$options) {", $context)
                 .$this->line('    return '.$this->generateValueFormat($node, $accessor).';', $context)
                 .$this->line('};', $context);
         }
@@ -233,6 +243,10 @@ final class PhpGenerator
 
     private function generateValueFormat(DataModelNodeInterface $node, string $accessor): string
     {
+        if ($node instanceof DateTimeNode) {
+            return "\$valueTransformers->get('json_streamer.value_transformer.string_to_date_time')->transform($accessor, \$options)";
+        }
+
         if ($node instanceof BackedEnumNode) {
             /** @var ObjectType $type */
             $type = $node->getType();
@@ -280,6 +294,10 @@ final class PhpGenerator
 
         while ($type instanceof WrappingTypeInterface) {
             $type = $type->getWrappedType();
+        }
+
+        if ($node instanceof DateTimeNode) {
+            return "\\is_string($accessor)";
         }
 
         if ($type instanceof BackedEnumType) {
@@ -338,6 +356,10 @@ final class PhpGenerator
         }
 
         if ($node instanceof BackedEnumNode) {
+            return false;
+        }
+
+        if ($node instanceof DateTimeNode) {
             return false;
         }
 

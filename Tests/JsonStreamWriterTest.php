@@ -296,9 +296,19 @@ class JsonStreamWriterTest extends TestCase
         $dummy = new DummyWithDateTimes();
         $dummy->interface = new \DateTimeImmutable('2024-11-20');
         $dummy->immutable = new \DateTimeImmutable('2025-11-20');
+        $dummy->union = new \DateTimeImmutable('2026-11-20');
 
         $this->assertWritten(
-            '{"interface":"2024-11-20","immutable":"2025-11-20"}',
+            '{"interface":"2024-11-20","immutable":"2025-11-20","union":"2026-11-20"}',
+            $dummy,
+            Type::object(DummyWithDateTimes::class),
+            options: [DateTimeToStringValueTransformer::FORMAT_KEY => 'Y-m-d'],
+        );
+
+        $dummy->union = 10;
+
+        $this->assertWritten(
+            '{"interface":"2024-11-20","immutable":"2025-11-20","union":10}',
             $dummy,
             Type::object(DummyWithDateTimes::class),
             options: [DateTimeToStringValueTransformer::FORMAT_KEY => 'Y-m-d'],

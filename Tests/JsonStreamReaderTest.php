@@ -176,7 +176,15 @@ class JsonStreamReaderTest extends TestCase
             $this->assertInstanceOf(DummyWithDateTimes::class, $read);
             $this->assertEquals(new \DateTimeImmutable('2024-11-20'), $read->interface);
             $this->assertEquals(new \DateTimeImmutable('2025-11-20'), $read->immutable);
-        }, '{"interface":"2024-11-20","immutable":"2025-11-20"}', Type::object(DummyWithDateTimes::class));
+            $this->assertEquals(new \DateTimeImmutable('2026-11-20'), $read->union);
+        }, '{"interface":"2024-11-20","immutable":"2025-11-20","union":"2026-11-20"}', Type::object(DummyWithDateTimes::class));
+
+        $this->assertRead($reader, function (mixed $read) {
+            $this->assertInstanceOf(DummyWithDateTimes::class, $read);
+            $this->assertEquals(new \DateTimeImmutable('2024-11-20'), $read->interface);
+            $this->assertEquals(new \DateTimeImmutable('2025-11-20'), $read->immutable);
+            $this->assertEquals(10, $read->union);
+        }, '{"interface":"2024-11-20","immutable":"2025-11-20","union":10}', Type::object(DummyWithDateTimes::class));
     }
 
     public function testReadUnion()
