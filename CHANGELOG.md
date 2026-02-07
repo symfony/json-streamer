@@ -4,6 +4,10 @@ CHANGELOG
 8.1
 ---
 
+ * Add value object support
+ * Deprecate `DateTimeTypePropertyMetadataLoader` (both Read and Write), date times are handled as value objects
+ * Deprecate `DateTimeToStringValueTransformer` and `StringToDateTimeValueTransformer`, use `DateTimeValueObjectTransformer` instead
+ * Deprecate `ValueTransformerInterface`, use `PropertyValueTransformerInterface` instead
  * Add `$defaultOptions` to `JsonStreamReader` and `JsonStreamWriter`
 
 8.0

@@ -3,7 +3,7 @@
 /**
  * @param Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithDollarNamedProperties $data
  */
-return static function (mixed $data, \Psr\Container\ContainerInterface $valueTransformers, array $options): \Traversable {
+return static function (mixed $data, \Psr\Container\ContainerInterface $transformers, array $options): \Traversable {
     try {
         $prefix1 = '';
         yield "{{$prefix1}\"\$foo\":";

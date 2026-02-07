@@ -3,8 +3,8 @@
 /**
  * @param Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithNestedListDummies $data
  */
-return static function (mixed $data, \Psr\Container\ContainerInterface $valueTransformers, array $options): \Traversable {
-    $generators['Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithNestedListDummies'] = static function ($data, $depth) use ($valueTransformers, $options, &$generators) {
+return static function (mixed $data, \Psr\Container\ContainerInterface $transformers, array $options): \Traversable {
+    $generators['Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithNestedListDummies'] = static function ($data, $depth) use ($transformers, $options, &$generators) {
         if ($depth >= 512) {
             throw new \Symfony\Component\JsonStreamer\Exception\NotEncodableValueException('Maximum stack depth exceeded');
         }

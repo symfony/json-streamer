@@ -1,11 +1,11 @@
 <?php
 
-namespace Symfony\Component\JsonStreamer\Tests\Fixtures\ValueTransformer;
+namespace Symfony\Component\JsonStreamer\Tests\Fixtures\Transformer;
 
-use Symfony\Component\JsonStreamer\ValueTransformer\ValueTransformerInterface;
+use Symfony\Component\JsonStreamer\Transformer\PropertyValueTransformerInterface;
 use Symfony\Component\TypeInfo\Type;
 
-final class DivideStringAndCastToIntValueTransformer implements ValueTransformerInterface
+final class DivideStringAndCastToIntValueTransformer implements PropertyValueTransformerInterface
 {
     public function transform(mixed $value, array $options = []): mixed
     {

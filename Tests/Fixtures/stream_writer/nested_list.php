@@ -3,7 +3,7 @@
 /**
  * @param list<Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithList> $data
  */
-return static function (mixed $data, \Psr\Container\ContainerInterface $valueTransformers, array $options): \Traversable {
+return static function (mixed $data, \Psr\Container\ContainerInterface $transformers, array $options): \Traversable {
     try {
         yield "[";
         $prefix1 = '';
