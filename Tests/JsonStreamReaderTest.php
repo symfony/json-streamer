@@ -181,7 +181,7 @@ class JsonStreamReaderTest extends TestCase
 
     public function testReadUnion()
     {
-        $reader = JsonStreamReader::create(streamReadersDir: $this->streamReadersDir, lazyGhostsDir: $this->lazyGhostsDir);
+        $reader = JsonStreamReader::create([], $this->streamReadersDir);
 
         $this->assertRead($reader, function (mixed $read) {
             $this->assertInstanceOf(DummyWithNameAttributes::class, $read);
