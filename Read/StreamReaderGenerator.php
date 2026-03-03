@@ -76,7 +76,7 @@ final class StreamReaderGenerator
      * @param array<string, mixed> $options
      * @param array<string, mixed> $context
      */
-    private function createDataModel(Type $type, array $options = [], array $context = []): DataModelNodeInterface
+    private function createDataModel(Type $type, array $options = [], array &$context = []): DataModelNodeInterface
     {
         $context['original_type'] ??= $type;
 
