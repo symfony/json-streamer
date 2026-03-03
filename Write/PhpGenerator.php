@@ -84,6 +84,12 @@ final class PhpGenerator
      */
     private function generateObjectGenerators(DataModelNodeInterface $node, array $options, array &$context): array
     {
+        if ($node instanceof ObjectNode && $node->isMock()) {
+            $context['mocks'][$node->getIdentifier()] = true;
+
+            return [];
+        }
+
         if ($context['generated_generators'][$node->getIdentifier()] ?? false) {
             return [];
         }
@@ -105,12 +111,6 @@ final class PhpGenerator
         }
 
         if ($node instanceof ObjectNode) {
-            if ($node->isMock()) {
-                $context['mocks'][$node->getIdentifier()] = true;
-
-                return [];
-            }
-
             $context['generating_generator'] = true;
 
             ++$context['indentation_level'];

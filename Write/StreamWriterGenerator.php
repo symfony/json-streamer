@@ -75,7 +75,7 @@ final class StreamWriterGenerator
      * @param array<string, mixed> $options
      * @param array<string, mixed> $context
      */
-    private function createDataModel(Type $type, string $accessor, array $options = [], array $context = []): DataModelNodeInterface
+    private function createDataModel(Type $type, string $accessor, array $options = [], array &$context = []): DataModelNodeInterface
     {
         $context['original_type'] ??= $type;
         $context['depth'] ??= 0;
@@ -152,13 +152,15 @@ final class StreamWriterGenerator
 
         if ($type instanceof CollectionType) {
             ++$context['depth'];
-
-            return new CollectionNode(
+            $node = new CollectionNode(
                 $accessor,
                 $type,
                 $this->createDataModel($type->getCollectionValueType(), '$value'.$context['depth'], $options, $context),
                 $this->createDataModel($type->getCollectionKeyType(), '$key'.$context['depth'], $options, $context),
             );
+            --$context['depth'];
+
+            return $node;
         }
 
         throw new UnsupportedException(\sprintf('"%s" type is not supported.', (string) $type));

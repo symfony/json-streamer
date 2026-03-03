@@ -31,12 +31,14 @@ use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithNestedList;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithNestedListDummies;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithNullableProperties;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithPhpDoc;
+use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithSelfReferencingDummy;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithSyntheticProperties;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithUnionProperties;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithValueTransformerAttributes;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\SelfReferencingDummy;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\SelfReferencingDummyDict;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\SelfReferencingDummyList;
+use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\SelfReferencingDummyWithOtherDummy;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\ValueTransformer\BooleanToStringValueTransformer;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\ValueTransformer\DoubleIntAndCastToStringValueTransformer;
 use Symfony\Component\JsonStreamer\ValueTransformer\DateTimeToStringValueTransformer;
@@ -325,6 +327,22 @@ class JsonStreamWriterTest extends TestCase
         $writer = new JsonStreamWriter(new Container(), new SyntheticPropertyMetadataLoader(), $this->streamWritersDir);
 
         $this->assertSame('{"synthetic":true}', (string) $writer->write(new DummyWithSyntheticProperties(), Type::object(DummyWithSyntheticProperties::class)));
+    }
+
+    public function testWriteSelfReferencingWithOtherDummy()
+    {
+        $dummy = new DummyWithSelfReferencingDummy();
+        $dummy->otherDummy = new ClassicDummy();
+        $dummy->selfReferencing = new SelfReferencingDummyWithOtherDummy();
+        $dummy->selfReferencing->otherDummy = new ClassicDummy();
+        $dummy->selfReferencing->self = new SelfReferencingDummyWithOtherDummy();
+        $dummy->selfReferencing->self->otherDummy = new ClassicDummy();
+
+        $this->assertWritten(
+            '{"otherDummy":{"id":1,"name":"dummy"},"selfReferencing":{"otherDummy":{"id":1,"name":"dummy"},"self":{"otherDummy":{"id":1,"name":"dummy"}}}}',
+            $dummy,
+            Type::object(DummyWithSelfReferencingDummy::class),
+        );
     }
 
     public function testWriteNestedSelfList()
