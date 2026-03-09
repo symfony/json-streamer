@@ -68,6 +68,13 @@ final class LazyInstantiator
             throw new RuntimeException($e->getMessage(), $e->getCode(), $e);
         }
 
+        if ($classReflection->isInternal()) {
+            $instance = $classReflection->newInstanceWithoutConstructor();
+            $initializer($instance);
+
+            return $instance;
+        }
+
         // use native lazy ghosts if available
         if (\PHP_VERSION_ID >= 80400) {
             return $classReflection->newLazyGhost($initializer);
