@@ -19,11 +19,19 @@ class LazyInstantiatorTest extends TestCase
 {
     public function testCreateLazyGhostUsingPhp()
     {
-        $ghost = (new LazyInstantiator())->instantiate(ClassicDummy::class, function (ClassicDummy $object): void {
+        $ghost = (new LazyInstantiator())->instantiate(ClassicDummy::class, static function (ClassicDummy $object): void {
             $object->id = 123;
         });
 
         $this->assertSame(123, $ghost->id);
+    }
+
+    public function testInstantiateInternalClassEagerly()
+    {
+        $object = (new LazyInstantiator())->instantiate(\DateTimeImmutable::class, static function (\DateTimeImmutable $object): void {
+        });
+
+        $this->assertInstanceOf(\DateTimeImmutable::class, $object);
     }
 }
 
