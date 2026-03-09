@@ -25,6 +25,14 @@ class LazyInstantiatorTest extends TestCase
 
         $this->assertSame(123, $ghost->id);
     }
+
+    public function testInstantiateInternalClassEagerly()
+    {
+        $object = (new LazyInstantiator())->instantiate(\DateTimeImmutable::class, static function (\DateTimeImmutable $object): void {
+        });
+
+        $this->assertInstanceOf(\DateTimeImmutable::class, $object);
+    }
 }
 
 class DummyForLazyInstantiation
