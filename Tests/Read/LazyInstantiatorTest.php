@@ -56,7 +56,9 @@ class LazyInstantiatorTest extends TestCase
     public function testThrowIfLazyGhostDirNotDefined()
     {
         $this->expectException(InvalidArgumentException::class);
-        new LazyInstantiator();
+
+        (new LazyInstantiator())->instantiate(ClassicDummy::class, static function (ClassicDummy $object): void {
+        });
     }
 
     #[RequiresPhp('>=8.4')]

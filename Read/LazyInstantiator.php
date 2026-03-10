@@ -47,9 +47,6 @@ final class LazyInstantiator
     public function __construct(
         private ?string $lazyGhostsDir = null,
     ) {
-        if (null === $this->lazyGhostsDir && \PHP_VERSION_ID < 80400) {
-            throw new InvalidArgumentException('The "$lazyGhostsDir" argument cannot be null when using PHP < 8.4.');
-        }
     }
 
     /**
@@ -81,6 +78,10 @@ final class LazyInstantiator
         }
 
         $this->fs ??= new Filesystem();
+
+        if (null === $this->lazyGhostsDir) {
+            throw new InvalidArgumentException('The "$lazyGhostsDir" argument cannot be null when using PHP < 8.4.');
+        }
 
         $lazyClassName = self::$cache['lazy_class_name'][$className] ??= \sprintf('%sGhost', preg_replace('/\\\\/', '', $className));
 
