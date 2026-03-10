@@ -25,11 +25,10 @@ use Symfony\Component\JsonStreamer\Exception\RuntimeException;
 final class LazyInstantiator
 {
     /**
-     * @var array{reflection: array<class-string, \ReflectionClass<object>>, lazy_class_name: array<class-string, class-string>}
+     * @var array{reflection: array<class-string, \ReflectionClass<object>>}
      */
     private static array $cache = [
         'reflection' => [],
-        'lazy_class_name' => [],
     ];
 
     /**
@@ -55,7 +54,6 @@ final class LazyInstantiator
             return $instance;
         }
 
-        // use native lazy ghosts if available
         return $classReflection->newLazyGhost($initializer);
     }
 }
