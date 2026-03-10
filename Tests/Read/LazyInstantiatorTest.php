@@ -34,7 +34,3 @@ class LazyInstantiatorTest extends TestCase
         $this->assertInstanceOf(\DateTimeImmutable::class, $object);
     }
 }
-
-class DummyForLazyInstantiation
-{
-}
