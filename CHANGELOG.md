@@ -4,6 +4,7 @@ CHANGELOG
 8.1
 ---
 
+ * Add timezone support to `DateTimeValueObjectTransformer`
  * Add value object support
  * Deprecate `DateTimeTypePropertyMetadataLoader` (both Read and Write), date times are handled as value objects
  * Deprecate `DateTimeToStringValueTransformer` and `StringToDateTimeValueTransformer`, use `DateTimeValueObjectTransformer` instead

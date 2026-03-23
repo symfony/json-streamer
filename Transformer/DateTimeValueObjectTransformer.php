@@ -21,31 +21,50 @@ use Symfony\Component\TypeInfo\TypeIdentifier;
  *
  * @author Mathias Arlaud <mathias.arlaud@gmail.com>
  *
+ * @psalm-type Options = array{
+ *     date_time_format?: string,
+ *     date_time_timezone?: string|\DateTimeZone,
+ *     ...<string, mixed>,
+ * }
+ *
  * @implements ValueObjectTransformerInterface<\DateTimeInterface, string>
  */
 final class DateTimeValueObjectTransformer implements ValueObjectTransformerInterface
 {
     public const FORMAT_KEY = 'date_time_format';
+    public const TIMEZONE_KEY = 'date_time_timezone';
 
+    /**
+     * @param Options $options
+     */
     public function transform(object $object, array $options = []): int|float|string|bool|null
     {
         if (!$object instanceof \DateTimeInterface) {
             throw new InvalidArgumentException('The native value must implement the "\DateTimeInterface".');
         }
 
+        $timezone = $this->getTimezone($options);
+        if ($timezone && method_exists($object, 'setTimezone')) {
+            $object = (clone $object)->setTimezone($timezone);
+        }
+
         return $object->format($options[self::FORMAT_KEY] ?? \DateTimeInterface::RFC3339);
     }
 
-    public function reverseTransform(int|float|string|bool|null $scalar, array $options = []): object
+    /**
+     * @param Options $options
+     */
+    public function reverseTransform(int|float|string|bool|null $scalar, array $options = []): \DateTimeImmutable
     {
         if (!\is_string($scalar) || '' === trim($scalar)) {
             throw new InvalidArgumentException('The JSON value is either not an string, or an empty string; you should pass a string that can be parsed with the passed format or a valid DateTime string.');
         }
 
         $dateTimeFormat = $options[self::FORMAT_KEY] ?? null;
+        $timezone = $this->getTimezone($options);
 
         if (null !== $dateTimeFormat) {
-            if (false !== $dateTime = \DateTimeImmutable::createFromFormat($dateTimeFormat, $scalar)) {
+            if ($dateTime = \DateTimeImmutable::createFromFormat($dateTimeFormat, $scalar, $timezone)) {
                 return $dateTime;
             }
 
@@ -55,7 +74,7 @@ final class DateTimeValueObjectTransformer implements ValueObjectTransformerInte
         }
 
         try {
-            return new \DateTimeImmutable($scalar);
+            return new \DateTimeImmutable($scalar, $timezone);
         } catch (\Throwable) {
             $dateTimeErrors = \DateTimeImmutable::getLastErrors();
 
@@ -74,6 +93,18 @@ final class DateTimeValueObjectTransformer implements ValueObjectTransformerInte
     public static function getValueObjectClassName(): string
     {
         return \DateTimeInterface::class;
+    }
+
+    /**
+     * @param Options $options
+     */
+    private function getTimezone(array $options): ?\DateTimeZone
+    {
+        if (!($dateTimeZone = $options[self::TIMEZONE_KEY] ?? null)) {
+            return null;
+        }
+
+        return $dateTimeZone instanceof \DateTimeZone ? $dateTimeZone : new \DateTimeZone($dateTimeZone);
     }
 
     /**
