@@ -31,6 +31,8 @@ use Symfony\Component\TypeInfo\TypeResolver\TypeResolver;
  * @author Mathias Arlaud <mathias.arlaud@gmail.com>
  *
  * @psalm-type Options = array{
+ *     date_time_format?: string,
+ *     date_time_timezone?: string|\DateTimeZone,
  *     include_null_properties?: bool,
  *     ...<string, mixed>,
  * }

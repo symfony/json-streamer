@@ -32,6 +32,32 @@ class DateTimeValueObjectTransformerTest extends TestCase
         );
     }
 
+    public function testTransformWithTimezone()
+    {
+        $transformer = new DateTimeValueObjectTransformer();
+
+        $this->assertSame(
+            '2016-12-01T09:00:00+09:00',
+            $transformer->transform(new \DateTimeImmutable('2016/12/01', new \DateTimeZone('UTC')), [
+                DateTimeValueObjectTransformer::TIMEZONE_KEY => new \DateTimeZone('Asia/Tokyo'),
+            ]),
+        );
+
+        $this->assertSame(
+            '2016-12-01T00:00:00+09:00',
+            $transformer->transform(new \DateTimeImmutable('2016/12/01', new \DateTimeZone('Asia/Tokyo')), [
+                DateTimeValueObjectTransformer::TIMEZONE_KEY => new \DateTimeZone('Asia/Tokyo'),
+            ]),
+        );
+
+        $this->assertSame(
+            '2016-12-01T09:00:00+09:00',
+            $transformer->transform(new \DateTimeImmutable('2016/12/01', new \DateTimeZone('UTC')), [
+                DateTimeValueObjectTransformer::TIMEZONE_KEY => 'Asia/Tokyo',
+            ]),
+        );
+    }
+
     public function testTransformThrowWhenInvalidNativeValue()
     {
         $this->expectException(InvalidArgumentException::class);
@@ -52,6 +78,34 @@ class DateTimeValueObjectTransformerTest extends TestCase
         $this->assertEquals(
             (new \DateTimeImmutable('2023-07-26'))->setTime(0, 0),
             $transformer->reverseTransform('26/07/2023 00:00:00', [DateTimeValueObjectTransformer::FORMAT_KEY => 'd/m/Y H:i:s']),
+        );
+    }
+
+    public function testReverseTransformWithTimezone()
+    {
+        $transformer = new DateTimeValueObjectTransformer();
+
+        $this->assertEquals(
+            new \DateTimeImmutable('2016/12/01 17:35:00', new \DateTimeZone('Asia/Tokyo')),
+            $transformer->reverseTransform('2016/12/01 17:35:00', [
+                DateTimeValueObjectTransformer::FORMAT_KEY => 'Y/m/d H:i:s',
+                DateTimeValueObjectTransformer::TIMEZONE_KEY => new \DateTimeZone('Asia/Tokyo'),
+            ]),
+        );
+
+        $this->assertEquals(
+            new \DateTimeImmutable('2016/12/01 17:35:00', new \DateTimeZone('Asia/Tokyo')),
+            $transformer->reverseTransform('2016/12/01 17:35:00', [
+                DateTimeValueObjectTransformer::FORMAT_KEY => 'Y/m/d H:i:s',
+                DateTimeValueObjectTransformer::TIMEZONE_KEY => 'Asia/Tokyo',
+            ]),
+        );
+
+        $this->assertEquals(
+            new \DateTimeImmutable('2016/12/01 17:35:00', new \DateTimeZone('Asia/Tokyo')),
+            $transformer->reverseTransform('2016/12/01 17:35:00', [
+                DateTimeValueObjectTransformer::TIMEZONE_KEY => new \DateTimeZone('Asia/Tokyo'),
+            ]),
         );
     }
 
