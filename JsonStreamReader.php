@@ -21,6 +21,7 @@ use Symfony\Component\JsonStreamer\Mapping\Read\AttributePropertyMetadataLoader;
 use Symfony\Component\JsonStreamer\Read\Instantiator;
 use Symfony\Component\JsonStreamer\Read\LazyInstantiator;
 use Symfony\Component\JsonStreamer\Read\StreamReaderGenerator;
+use Symfony\Component\JsonStreamer\Transformer\DateIntervalValueObjectTransformer;
 use Symfony\Component\JsonStreamer\Transformer\DateTimeValueObjectTransformer;
 use Symfony\Component\JsonStreamer\Transformer\PropertyValueTransformerInterface;
 use Symfony\Component\JsonStreamer\Transformer\ValueObjectTransformerInterface;
@@ -35,6 +36,7 @@ use Symfony\Component\TypeInfo\TypeResolver\TypeResolver;
  * @psalm-type Options = array{
  *     date_time_format?: string,
  *     date_time_timezone?: string|\DateTimeZone,
+ *     date_interval_format?: string,
  *     ...<string, mixed>,
  * }
  *
@@ -83,6 +85,7 @@ final class JsonStreamReader implements StreamReaderInterface
         $streamReadersDir ??= sys_get_temp_dir().'/json_streamer/read';
         $transformers += [
             \DateTimeInterface::class => new DateTimeValueObjectTransformer(),
+            \DateInterval::class => new DateIntervalValueObjectTransformer(),
         ];
 
         $transformersContainer = new class($transformers) implements ContainerInterface {

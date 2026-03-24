@@ -17,6 +17,7 @@ use Symfony\Component\JsonStreamer\JsonStreamReader;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Enum\DummyBackedEnum;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Mapping\SyntheticPropertyMetadataLoader;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\ClassicDummy;
+use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithDateIntervals;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithDateTimes;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithGenerics;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithNameAttributes;
@@ -198,6 +199,16 @@ class JsonStreamReaderTest extends TestCase
             $this->assertEquals(new \DateTimeImmutable('2025-11-20'), $read->immutable);
             $this->assertEquals(10, $read->union);
         }, '{"interface":"2024-11-20","immutable":"2025-11-20","union":10}', Type::object(DummyWithDateTimes::class));
+    }
+
+    public function testReadObjectWithDateIntervals()
+    {
+        $reader = JsonStreamReader::create([], $this->streamReadersDir);
+
+        $this->assertRead($reader, function (mixed $read) {
+            $this->assertInstanceOf(DummyWithDateIntervals::class, $read);
+            $this->assertEquals(new \DateInterval('P2Y6M1DT12H30M5S'), $read->interval);
+        }, '{"interval":"P2Y6M1DT12H30M5S"}', Type::object(DummyWithDateIntervals::class));
     }
 
     public function testReadUnion()

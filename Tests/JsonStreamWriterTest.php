@@ -20,6 +20,7 @@ use Symfony\Component\JsonStreamer\Tests\Fixtures\Enum\DummyBackedEnum;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Mapping\SyntheticPropertyMetadataLoader;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\ClassicDummy;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithArray;
+use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithDateIntervals;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithDateTimes;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithDollarNamedProperties;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithGenerics;
@@ -44,6 +45,7 @@ use Symfony\Component\JsonStreamer\Tests\Fixtures\Transformer\BooleanToStringVal
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Transformer\DoubleIntAndCastToStringValueTransformer;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Transformer\HeightValueObjectTransformer;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\ValueObject\Height;
+use Symfony\Component\JsonStreamer\Transformer\DateIntervalValueObjectTransformer;
 use Symfony\Component\JsonStreamer\Transformer\DateTimeValueObjectTransformer;
 use Symfony\Component\JsonStreamer\Transformer\PropertyValueTransformerInterface;
 use Symfony\Component\JsonStreamer\Transformer\ValueObjectTransformerInterface;
@@ -347,6 +349,19 @@ class JsonStreamWriterTest extends TestCase
             $dummy,
             Type::object(DummyWithDateTimes::class),
             options: [DateTimeValueObjectTransformer::FORMAT_KEY => 'Y-m-d'],
+        );
+    }
+
+    public function testWriteObjectWithDateIntervals()
+    {
+        $dummy = new DummyWithDateIntervals();
+        $dummy->interval = new \DateInterval('P2Y6M1DT12H30M5S');
+
+        $this->assertWritten(
+            '{"interval":"P2Y6M1DT12H30M5S"}',
+            $dummy,
+            Type::object(DummyWithDateIntervals::class),
+            options: [DateIntervalValueObjectTransformer::FORMAT_KEY => 'P%yY%mM%dDT%hH%iM%sS'],
         );
     }
 
