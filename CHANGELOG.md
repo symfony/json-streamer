@@ -4,6 +4,7 @@ CHANGELOG
 8.1
 ---
 
+ * Add `DateTimeZone` value object support with `DateTimeZoneValueObjectTransformer`
  * Add `DateInterval` value object support with `DateIntervalValueObjectTransformer`
  * Add timezone support to `DateTimeValueObjectTransformer`
  * Add value object support
