@@ -17,6 +17,6 @@ return static function (mixed $data, \Psr\Container\ContainerInterface $transfor
         yield \json_encode(Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithValueTransformerAttributes::concatRange($data->range, ['_current_object' => $data] + $options), \JSON_THROW_ON_ERROR, 511);
         yield "}";
     } catch (\JsonException $e) {
-        throw new \Symfony\Component\JsonStreamer\Exception\NotEncodableValueException($e->getMessage(), 0, $e);
+        throw new \Symfony\Component\JsonStreamer\Exception\NotEncodableValueException("Cannot encode \"Symfony\\Component\\JsonStreamer\\Tests\\Fixtures\\Model\\DummyWithValueTransformerAttributes\" to JSON: {$e->getMessage()}.", 0, $e);
     }
 };

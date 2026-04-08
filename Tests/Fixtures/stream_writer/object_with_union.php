@@ -22,6 +22,6 @@ return static function (mixed $data, \Psr\Container\ContainerInterface $transfor
         }
         yield "}";
     } catch (\JsonException $e) {
-        throw new \Symfony\Component\JsonStreamer\Exception\NotEncodableValueException($e->getMessage(), 0, $e);
+        throw new \Symfony\Component\JsonStreamer\Exception\NotEncodableValueException("Cannot encode \"Symfony\\Component\\JsonStreamer\\Tests\\Fixtures\\Model\\DummyWithUnionProperties\" to JSON: {$e->getMessage()}.", 0, $e);
     }
 };

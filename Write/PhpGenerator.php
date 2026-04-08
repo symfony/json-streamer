@@ -78,7 +78,7 @@ final class PhpGenerator
             .$this->line('    try {', $context)
             .$yields
             .$this->line('    } catch (\\JsonException $e) {', $context)
-            .$this->line('        throw new \\'.NotEncodableValueException::class.'($e->getMessage(), 0, $e);', $context)
+            .$this->line(\sprintf('        throw new \\%s("Cannot encode \\"%s\\" to JSON: {$e->getMessage()}.", 0, $e);', NotEncodableValueException::class, addcslashes($dataModel->getType(), '\\')), $context)
             .$this->line('    }', $context)
             .$this->line('};', $context);
     }

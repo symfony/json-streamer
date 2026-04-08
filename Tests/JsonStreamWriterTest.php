@@ -484,7 +484,7 @@ class JsonStreamWriterTest extends TestCase
         $writer = JsonStreamWriter::create(streamWritersDir: $this->streamWritersDir);
 
         $this->expectException(NotEncodableValueException::class);
-        $this->expectExceptionMessage('Inf and NaN cannot be JSON encoded');
+        $this->expectExceptionMessage('Cannot encode "int" to JSON: Inf and NaN cannot be JSON encoded.');
 
         (string) $writer->write(\INF, Type::int());
     }
