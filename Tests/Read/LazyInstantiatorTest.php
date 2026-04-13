@@ -36,7 +36,7 @@ class LazyInstantiatorTest extends TestCase
     #[RequiresPhp('<8.4')]
     public function testCreateLazyGhostUsingVarExporter()
     {
-        $ghost = (new LazyInstantiator($this->lazyGhostsDir))->instantiate(ClassicDummy::class, function (ClassicDummy $object): void {
+        $ghost = (new LazyInstantiator($this->lazyGhostsDir))->instantiate(ClassicDummy::class, static function (ClassicDummy $object): void {
             $object->id = 123;
         });
 
@@ -47,7 +47,7 @@ class LazyInstantiatorTest extends TestCase
     public function testCreateCacheFile()
     {
         // use DummyForLazyInstantiation class to be sure that the instantiated object is not already in cache.
-        (new LazyInstantiator($this->lazyGhostsDir))->instantiate(DummyForLazyInstantiation::class, function (DummyForLazyInstantiation $object): void {});
+        (new LazyInstantiator($this->lazyGhostsDir))->instantiate(DummyForLazyInstantiation::class, static function (DummyForLazyInstantiation $object): void {});
 
         $this->assertCount(1, glob($this->lazyGhostsDir.'/*'));
     }
