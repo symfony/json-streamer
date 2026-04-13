@@ -48,7 +48,7 @@ class StreamerDumperTest extends TestCase
         $path = $this->cacheDir.'/streamer.php';
 
         $dumper = new StreamerDumper($this->createStub(PropertyMetadataLoaderInterface::class), $this->cacheDir, new ConfigCacheFactory(true));
-        $dumper->dump(Type::int(), $path, fn () => 'CONTENT');
+        $dumper->dump(Type::int(), $path, static fn () => 'CONTENT');
 
         $this->assertFileExists($path);
         $this->assertFileExists($path.'.meta');
@@ -62,7 +62,7 @@ class StreamerDumperTest extends TestCase
         $path = $this->cacheDir.'/streamer.php';
 
         $dumper = new StreamerDumper($this->createStub(PropertyMetadataLoaderInterface::class), $this->cacheDir);
-        $dumper->dump(Type::int(), $path, fn () => 'CONTENT');
+        $dumper->dump(Type::int(), $path, static fn () => 'CONTENT');
 
         $this->assertFileExists($path);
         $this->assertStringEqualsFile($path, 'CONTENT');
@@ -77,7 +77,7 @@ class StreamerDumperTest extends TestCase
         $path = $this->cacheDir.'/streamer.php';
 
         $dumper = new StreamerDumper(new PropertyMetadataLoader(TypeResolver::create()), $this->cacheDir, new ConfigCacheFactory(true));
-        $dumper->dump($type, $path, fn () => 'CONTENT');
+        $dumper->dump($type, $path, static fn () => 'CONTENT');
 
         $resources = json_decode(file_get_contents($path.'.meta.json'), true)['resources'];
         $classNames = array_column($resources, 'className');
