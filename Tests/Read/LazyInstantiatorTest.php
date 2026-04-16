@@ -33,7 +33,7 @@ class LazyInstantiatorTest extends TestCase
         }
     }
 
-    #[RequiresPhp('<8.4')]
+    #[RequiresPhp('<8.4.0')]
     public function testCreateLazyGhostUsingVarExporter()
     {
         $ghost = (new LazyInstantiator($this->lazyGhostsDir))->instantiate(ClassicDummy::class, static function (ClassicDummy $object): void {
@@ -43,7 +43,7 @@ class LazyInstantiatorTest extends TestCase
         $this->assertSame(123, $ghost->id);
     }
 
-    #[RequiresPhp('<8.4')]
+    #[RequiresPhp('<8.4.0')]
     public function testCreateCacheFile()
     {
         // use DummyForLazyInstantiation class to be sure that the instantiated object is not already in cache.
@@ -52,7 +52,7 @@ class LazyInstantiatorTest extends TestCase
         $this->assertCount(1, glob($this->lazyGhostsDir.'/*'));
     }
 
-    #[RequiresPhp('<8.4')]
+    #[RequiresPhp('<8.4.0')]
     public function testThrowIfLazyGhostDirNotDefined()
     {
         $this->expectException(InvalidArgumentException::class);
@@ -61,7 +61,7 @@ class LazyInstantiatorTest extends TestCase
         });
     }
 
-    #[RequiresPhp('>=8.4')]
+    #[RequiresPhp('>=8.4.0')]
     public function testCreateLazyGhostUsingPhp()
     {
         $ghost = (new LazyInstantiator())->instantiate(ClassicDummy::class, static function (ClassicDummy $object): void {
