@@ -225,7 +225,7 @@ class JsonStreamReaderTest extends TestCase
         $reader = JsonStreamReader::create([], $this->streamReadersDir, $this->lazyGhostsDir);
 
         if (!file_exists($this->streamReadersDir)) {
-            mkdir($this->streamReadersDir, 0777, true);
+            mkdir($this->streamReadersDir, 0o777, true);
         }
 
         file_put_contents(
