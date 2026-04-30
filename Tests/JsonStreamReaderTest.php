@@ -19,6 +19,7 @@ use Symfony\Component\JsonStreamer\Tests\Fixtures\Mapping\SyntheticPropertyMetad
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\ClassicDummy;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithDateIntervals;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithDateTimes;
+use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithDateTimeZones;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithGenerics;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithNameAttributes;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithNullableProperties;
@@ -209,6 +210,16 @@ class JsonStreamReaderTest extends TestCase
             $this->assertInstanceOf(DummyWithDateIntervals::class, $read);
             $this->assertEquals(new \DateInterval('P2Y6M1DT12H30M5S'), $read->interval);
         }, '{"interval":"P2Y6M1DT12H30M5S"}', Type::object(DummyWithDateIntervals::class));
+    }
+
+    public function testReadObjectWithDateTimeZones()
+    {
+        $reader = JsonStreamReader::create([], $this->streamReadersDir);
+
+        $this->assertRead($reader, function (mixed $read) {
+            $this->assertInstanceOf(DummyWithDateTimeZones::class, $read);
+            $this->assertEquals(new \DateTimeZone('Asia/Tokyo'), $read->timezone);
+        }, '{"timezone":"Asia/Tokyo"}', Type::object(DummyWithDateTimeZones::class));
     }
 
     public function testReadUnion()

@@ -37,7 +37,7 @@ final class DateTimeValueObjectTransformer implements ValueObjectTransformerInte
     /**
      * @param Options $options
      */
-    public function transform(object $object, array $options = []): int|float|string|bool|null
+    public function transform(object $object, array $options = []): string
     {
         if (!$object instanceof \DateTimeInterface) {
             throw new InvalidArgumentException('The native value must implement the "\DateTimeInterface".');

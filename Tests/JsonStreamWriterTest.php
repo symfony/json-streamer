@@ -22,6 +22,7 @@ use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\ClassicDummy;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithArray;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithDateIntervals;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithDateTimes;
+use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithDateTimeZones;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithDollarNamedProperties;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithGenerics;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithList;
@@ -362,6 +363,18 @@ class JsonStreamWriterTest extends TestCase
             $dummy,
             Type::object(DummyWithDateIntervals::class),
             options: [DateIntervalValueObjectTransformer::FORMAT_KEY => 'P%yY%mM%dDT%hH%iM%sS'],
+        );
+    }
+
+    public function testWriteObjectWithDateTimeZones()
+    {
+        $dummy = new DummyWithDateTimeZones();
+        $dummy->timezone = new \DateTimeZone('Asia/Tokyo');
+
+        $this->assertWritten(
+            '{"timezone":"Asia\/Tokyo"}',
+            $dummy,
+            Type::object(DummyWithDateTimeZones::class),
         );
     }
 

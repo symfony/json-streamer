@@ -37,7 +37,7 @@ final class DateIntervalValueObjectTransformer implements ValueObjectTransformer
     /**
      * @param Options $options
      */
-    public function transform(object $object, array $options = []): int|float|string|bool|null
+    public function transform(object $object, array $options = []): string
     {
         if (!$object instanceof \DateInterval) {
             throw new InvalidArgumentException('The native value must be an instance of "\DateInterval".');

@@ -20,6 +20,7 @@ use Symfony\Component\JsonStreamer\Mapping\PropertyMetadataLoaderInterface;
 use Symfony\Component\JsonStreamer\Mapping\Write\AttributePropertyMetadataLoader;
 use Symfony\Component\JsonStreamer\Transformer\DateIntervalValueObjectTransformer;
 use Symfony\Component\JsonStreamer\Transformer\DateTimeValueObjectTransformer;
+use Symfony\Component\JsonStreamer\Transformer\DateTimeZoneValueObjectTransformer;
 use Symfony\Component\JsonStreamer\Transformer\PropertyValueTransformerInterface;
 use Symfony\Component\JsonStreamer\Transformer\ValueObjectTransformerInterface;
 use Symfony\Component\JsonStreamer\Write\StreamWriterGenerator;
@@ -108,6 +109,7 @@ final class JsonStreamWriter implements StreamWriterInterface
         $transformers += [
             \DateTimeInterface::class => new DateTimeValueObjectTransformer(),
             \DateInterval::class => new DateIntervalValueObjectTransformer(),
+            \DateTimeZone::class => new DateTimeZoneValueObjectTransformer(),
         ];
 
         $transformersContainer = new class($transformers) implements ContainerInterface {
