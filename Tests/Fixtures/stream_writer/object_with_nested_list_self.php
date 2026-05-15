@@ -4,7 +4,7 @@
  * @param Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithNestedListDummies $data
  */
 return static function (mixed $data, \Psr\Container\ContainerInterface $transformers, array $options): \Traversable {
-    $generators['Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithNestedListDummies'] = static function ($data, $depth) use ($transformers, $options, &$generators) {
+    $generators['Symfony\\Component\\JsonStreamer\\Tests\\Fixtures\\Model\\DummyWithNestedListDummies'] = static function ($data, $depth) use ($transformers, $options, &$generators) {
         if ($depth >= 512) {
             throw new \Symfony\Component\JsonStreamer\Exception\NotEncodableValueException('Maximum stack depth exceeded');
         }
@@ -15,13 +15,13 @@ return static function (mixed $data, \Psr\Container\ContainerInterface $transfor
         foreach ($data->dummies as $key1 => $value1) {
             $key1 = is_int($key1) ? $key1 : \substr(\json_encode($key1), 1, -1);
             yield "{$prefix2}\"{$key1}\":";
-            yield from $generators['Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithNestedListDummies']($value1, $depth + 1);
+            yield from $generators['Symfony\\Component\\JsonStreamer\\Tests\\Fixtures\\Model\\DummyWithNestedListDummies']($value1, $depth + 1);
             $prefix2 = ',';
         }
         yield "}}";
     };
     try {
-        yield from $generators['Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithNestedListDummies']($data, 0);
+        yield from $generators['Symfony\\Component\\JsonStreamer\\Tests\\Fixtures\\Model\\DummyWithNestedListDummies']($data, 0);
     } catch (\JsonException $e) {
         throw new \Symfony\Component\JsonStreamer\Exception\NotEncodableValueException("Cannot encode \"Symfony\\Component\\JsonStreamer\\Tests\\Fixtures\\Model\\DummyWithNestedListDummies\" to JSON: {$e->getMessage()}.", 0, $e);
     }

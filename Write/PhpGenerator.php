@@ -130,7 +130,7 @@ final class PhpGenerator
             --$context['indentation_level'];
 
             $generators = [
-                $node->getIdentifier() => $this->line('$generators[\''.$node->getIdentifier().'\'] = static function ($data, $depth) use ($transformers, $options, &$generators) {', $context)
+                $node->getIdentifier() => $this->line('$generators['.var_export($node->getIdentifier(), true).'] = static function ($data, $depth) use ($transformers, $options, &$generators) {', $context)
                     .$this->line('    if ($depth >= 512) {', $context)
                     .$this->line('        throw new \\'.NotEncodableValueException::class.'(\'Maximum stack depth exceeded\');', $context)
                     .$this->line('    }', $context)
@@ -251,7 +251,7 @@ final class PhpGenerator
 
         if ($dataModelNode instanceof ObjectNode) {
             if ($valueObjectTransformerId = $this->getValueObjectTransformerId($dataModelNode->getType()->getClassName())) {
-                $rawValue = "\$transformers->get('$valueObjectTransformerId')->transform({$dataModelNode->getAccessor()}, \$options)";
+                $rawValue = '$transformers->get('.var_export($valueObjectTransformerId, true).")->transform({$dataModelNode->getAccessor()}, \$options)";
 
                 return $this->yield($this->encode($rawValue, $context), $context);
             }
@@ -260,7 +260,7 @@ final class PhpGenerator
                 $depthArgument = ($context['generating_generator'] ?? false) ? '$depth + 1' : (string) $context['depth'];
 
                 return $this->flushYieldBuffer($context)
-                    .$this->line('yield from $generators[\''.$dataModelNode->getIdentifier().'\']('.$accessor.', '.$depthArgument.');', $context);
+                    .$this->line('yield from $generators['.var_export($dataModelNode->getIdentifier(), true).']('.$accessor.', '.$depthArgument.');', $context);
             }
 
             ++$context['depth'];
@@ -349,7 +349,7 @@ final class PhpGenerator
      */
     private function encode(string $value, array $context): string
     {
-        return "\json_encode($value, \\JSON_THROW_ON_ERROR, ". 512 - $context['depth'].')';
+        return "\json_encode($value, \\JSON_THROW_ON_ERROR, ".(512 - $context['depth']).')';
     }
 
     /**

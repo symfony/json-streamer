@@ -13,8 +13,10 @@ namespace Symfony\Component\JsonStreamer\Tests\Write;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\JsonStreamer\Exception\RuntimeException;
 use Symfony\Component\JsonStreamer\Exception\UnsupportedException;
 use Symfony\Component\JsonStreamer\Mapping\GenericTypePropertyMetadataLoader;
+use Symfony\Component\JsonStreamer\Mapping\PropertyMetadata;
 use Symfony\Component\JsonStreamer\Mapping\PropertyMetadataLoader;
 use Symfony\Component\JsonStreamer\Mapping\PropertyMetadataLoaderInterface;
 use Symfony\Component\JsonStreamer\Mapping\Write\AttributePropertyMetadataLoader;
@@ -149,7 +151,7 @@ class StreamWriterGeneratorTest extends TestCase
         $generator = new StreamWriterGenerator(new PropertyMetadataLoader(TypeResolver::create()), new ServiceContainer(), $this->streamWritersDir);
 
         $this->expectException(UnsupportedException::class);
-        $this->expectExceptionMessage('"Stringable&Traversable" type is not supported.');
+        $this->expectExceptionMessage('Intersection types are not supported ("Stringable&Traversable").');
 
         $generator->generate(Type::intersection(Type::object(\Traversable::class), Type::object(\Stringable::class)));
     }
@@ -179,6 +181,40 @@ class StreamWriterGeneratorTest extends TestCase
             ->willReturn([]);
 
         $generator = new StreamWriterGenerator($propertyMetadataLoader, new ServiceContainer(), $this->streamWritersDir);
+        $generator->generate($type);
+    }
+
+    public function testAcceptsClosureFromNamedCallable()
+    {
+        $type = Type::object(ClassicDummy::class);
+
+        $propertyMetadataLoader = $this->createStub(PropertyMetadataLoaderInterface::class);
+        $propertyMetadataLoader->method('load')->willReturn([
+            'id' => new PropertyMetadata('id', Type::int(), [\Closure::fromCallable('strval')]),
+            'range' => new PropertyMetadata('name', Type::string(), [\Closure::fromCallable(DummyWithValueTransformerAttributes::concatRange(...))]),
+        ]);
+
+        $generator = new StreamWriterGenerator($propertyMetadataLoader, new ServiceContainer(), $this->streamWritersDir);
+        $code = file_get_contents($generator->generate($type));
+
+        $this->assertStringContainsString('strval(', $code);
+        $this->assertStringContainsString(DummyWithValueTransformerAttributes::class.'::concatRange(', $code);
+    }
+
+    public function testRejectsAnonymousClosureValueTransformer()
+    {
+        $type = Type::object(ClassicDummy::class);
+
+        $propertyMetadataLoader = $this->createStub(PropertyMetadataLoaderInterface::class);
+        $propertyMetadataLoader->method('load')->willReturn([
+            'id' => new PropertyMetadata('id', Type::int(), [static fn (int $v): int => $v + 1]),
+        ]);
+
+        $generator = new StreamWriterGenerator($propertyMetadataLoader, new ServiceContainer(), $this->streamWritersDir);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessageMatches('/Cannot generate accessor for anonymous function ".*\{closure[^"]*"\./');
+
         $generator->generate($type);
     }
 }

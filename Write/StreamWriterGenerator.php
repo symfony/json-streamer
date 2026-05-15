@@ -29,6 +29,7 @@ use Symfony\Component\TypeInfo\Type\BuiltinType;
 use Symfony\Component\TypeInfo\Type\CollectionType;
 use Symfony\Component\TypeInfo\Type\EnumType;
 use Symfony\Component\TypeInfo\Type\GenericType;
+use Symfony\Component\TypeInfo\Type\IntersectionType;
 use Symfony\Component\TypeInfo\Type\ObjectType;
 use Symfony\Component\TypeInfo\Type\UnionType;
 
@@ -81,6 +82,10 @@ final class StreamWriterGenerator
         $context['original_type'] ??= $type;
         $context['depth'] ??= 0;
 
+        if ($type instanceof IntersectionType) {
+            throw new UnsupportedException(\sprintf('Intersection types are not supported ("%s").', (string) $type));
+        }
+
         if ($type instanceof UnionType) {
             return new CompositeNode($accessor, array_map(fn (Type $t): DataModelNodeInterface => $this->createDataModel($t, $accessor, $options, $context), $type->getTypes()));
         }
@@ -121,7 +126,7 @@ final class StreamWriterGenerator
 
                 foreach ($propertyMetadata->getValueTransformers() as $valueTransformer) {
                     if (\is_string($valueTransformer)) {
-                        $valueTransformerServiceAccessor = "\$transformers->get('$valueTransformer')";
+                        $valueTransformerServiceAccessor = '$transformers->get('.var_export($valueTransformer, true).')';
 
                         $propertyAccessor = "{$valueTransformerServiceAccessor}->transform($propertyAccessor, ['_current_object' => $accessor] + \$options)";
 
@@ -132,6 +137,10 @@ final class StreamWriterGenerator
                         $functionReflection = new \ReflectionFunction($valueTransformer);
                     } catch (\ReflectionException $e) {
                         throw new RuntimeException($e->getMessage(), $e->getCode(), $e);
+                    }
+
+                    if ($functionReflection->isAnonymous()) {
+                        throw new RuntimeException(\sprintf('Cannot generate accessor for anonymous function "%s".', $functionReflection->getName()));
                     }
 
                     $functionName = !$functionReflection->getClosureCalledClass()

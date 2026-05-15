@@ -29,6 +29,7 @@ use Symfony\Component\TypeInfo\Type\BuiltinType;
 use Symfony\Component\TypeInfo\Type\CollectionType;
 use Symfony\Component\TypeInfo\Type\EnumType;
 use Symfony\Component\TypeInfo\Type\GenericType;
+use Symfony\Component\TypeInfo\Type\IntersectionType;
 use Symfony\Component\TypeInfo\Type\ObjectType;
 use Symfony\Component\TypeInfo\Type\UnionType;
 
@@ -80,6 +81,10 @@ final class StreamReaderGenerator
     {
         $context['original_type'] ??= $type;
 
+        if ($type instanceof IntersectionType) {
+            throw new UnsupportedException(\sprintf('Intersection types are not supported ("%s").', (string) $type));
+        }
+
         if ($type instanceof UnionType) {
             return new CompositeNode(array_map(fn (Type $t): DataModelNodeInterface => $this->createDataModel($t, $options, $context), $type->getTypes()));
         }
@@ -120,7 +125,7 @@ final class StreamReaderGenerator
                     'accessor' => static function (string $accessor) use ($propertyMetadata): string {
                         foreach ($propertyMetadata->getValueTransformers() as $valueTransformer) {
                             if (\is_string($valueTransformer)) {
-                                $accessor = "\$transformers->get('$valueTransformer')->transform($accessor, \$options)";
+                                $accessor = '$transformers->get('.var_export($valueTransformer, true).")->transform($accessor, \$options)";
 
                                 continue;
                             }
@@ -129,6 +134,10 @@ final class StreamReaderGenerator
                                 $functionReflection = new \ReflectionFunction($valueTransformer);
                             } catch (\ReflectionException $e) {
                                 throw new RuntimeException($e->getMessage(), $e->getCode(), $e);
+                            }
+
+                            if ($functionReflection->isAnonymous()) {
+                                throw new RuntimeException(\sprintf('Cannot generate accessor for anonymous function "%s".', $functionReflection->getName()));
                             }
 
                             $functionName = !$functionReflection->getClosureCalledClass()
