@@ -35,7 +35,7 @@ class StreamerDumperTest extends TestCase
     {
         parent::setUp();
 
-        $this->cacheDir = \sprintf('%s/symfony_json_streamer_test/any', sys_get_temp_dir());
+        $this->cacheDir = sys_get_temp_dir().'/sf_json-streamer_'.hash('xxh32', __FILE__).'/any';
 
         if (is_dir($this->cacheDir)) {
             array_map('unlink', glob($this->cacheDir.'/*'));
