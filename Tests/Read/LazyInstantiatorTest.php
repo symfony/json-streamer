@@ -25,7 +25,7 @@ class LazyInstantiatorTest extends TestCase
     {
         parent::setUp();
 
-        $this->lazyGhostsDir = \sprintf('%s/symfony_json_streamer_test/lazy_ghost', sys_get_temp_dir());
+        $this->lazyGhostsDir = sys_get_temp_dir().'/sf_json-streamer_'.hash('xxh32', __FILE__).'/lazy_ghost';
 
         if (is_dir($this->lazyGhostsDir)) {
             array_map('unlink', glob($this->lazyGhostsDir.'/*'));

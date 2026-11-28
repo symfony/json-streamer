@@ -53,8 +53,8 @@ class JsonStreamReaderTest extends TestCase
     {
         parent::setUp();
 
-        $this->streamReadersDir = \sprintf('%s/symfony_json_streamer_test/stream_reader', sys_get_temp_dir());
-        $this->lazyGhostsDir = \sprintf('%s/symfony_json_streamer_test/lazy_ghost', sys_get_temp_dir());
+        $this->streamReadersDir = sys_get_temp_dir().'/sf_json-streamer_'.hash('xxh32', __FILE__).'/stream_reader';
+        $this->lazyGhostsDir = sys_get_temp_dir().'/sf_json-streamer_'.hash('xxh32', __FILE__).'/lazy_ghost';
 
         if (is_dir($this->streamReadersDir)) {
             array_map('unlink', glob($this->streamReadersDir.'/*'));
