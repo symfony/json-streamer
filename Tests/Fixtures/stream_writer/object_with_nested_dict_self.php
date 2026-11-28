@@ -8,12 +8,15 @@ return static function (mixed $data, \Psr\Container\ContainerInterface $transfor
         if ($depth >= 512) {
             throw new \Symfony\Component\JsonStreamer\Exception\NotEncodableValueException('Maximum stack depth exceeded');
         }
+        if ($depth + 1 >= 512) {
+            throw new \Symfony\Component\JsonStreamer\Exception\NotEncodableValueException('Maximum stack depth exceeded');
+        }
         $buffer .= "{\"dummies\":{";
         $prefix2 = '';
         foreach ($data->dummies as $key1 => $value1) {
             $key1 = is_int($key1) ? $key1 : \substr(\json_encode($key1, \JSON_THROW_ON_ERROR | \JSON_PRESERVE_ZERO_FRACTION | \JSON_UNESCAPED_SLASHES | \JSON_UNESCAPED_UNICODE), 1, -1);
             $buffer .= "{$prefix2}\"{$key1}\":";
-            yield from $generators['Symfony\\Component\\JsonStreamer\\Tests\\Fixtures\\Model\\DummyWithNestedDictDummies']($value1, $depth + 1, $buffer);
+            yield from $generators['Symfony\\Component\\JsonStreamer\\Tests\\Fixtures\\Model\\DummyWithNestedDictDummies']($value1, $depth + 2, $buffer);
             $prefix2 = ',';
             if (\strlen($buffer) >= 8192) {
                 yield $buffer;

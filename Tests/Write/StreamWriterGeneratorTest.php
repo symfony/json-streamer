@@ -45,6 +45,7 @@ use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithValueTransforme
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\SelfReferencingDummy;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\SelfReferencingDummyDict;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\SelfReferencingDummyList;
+use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\SelfReferencingDummyWithCollections;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Transformer\BooleanToStringValueTransformer;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Transformer\DoubleIntAndCastToStringValueTransformer;
 use Symfony\Component\JsonStreamer\Tests\ServiceContainer;
@@ -147,6 +148,7 @@ class StreamWriterGeneratorTest extends TestCase
         yield ['self_referencing_object', Type::object(SelfReferencingDummy::class)];
         yield ['self_referencing_object_list', Type::object(SelfReferencingDummyList::class)];
         yield ['self_referencing_object_dict', Type::object(SelfReferencingDummyDict::class)];
+        yield ['self_referencing_object_with_collections', Type::object(SelfReferencingDummyWithCollections::class)];
         yield ['object_with_dollar_named_properties', Type::object(DummyWithDollarNamedProperties::class)];
         yield ['object_with_synthetic_properties', Type::object(DummyWithSyntheticProperties::class), new SyntheticPropertyMetadataLoader()];
 
