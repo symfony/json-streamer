@@ -153,8 +153,12 @@ final class PhpGenerator
     {
         $accessor = $dataModelNode->getAccessor();
 
+        // collections in a union cannot be told apart at runtime, so they are encoded as is
+        $castToObject = !($context['union_of_collections'] ?? false) && $this->shouldCastToObject($dataModelNode);
+        unset($context['union_of_collections']);
+
         if ($this->canBeEncodedWithJsonEncode($dataModelNode)) {
-            return $this->yieldEncoded($accessor, $context, $this->shouldForceObject($dataModelNode), !$this->isPlainScalar($dataModelNode));
+            return $this->yieldEncoded($castToObject ? "\\array_is_list(\$dict = $accessor) ? (object) \$dict : \$dict" : $accessor, $context, $this->shouldForceObject($dataModelNode), !$this->isPlainScalar($dataModelNode));
         }
 
         if ($context['depth'] >= self::MAX_DEPTH) {
@@ -183,7 +187,7 @@ final class PhpGenerator
                 $php .= $this->line((0 === $i ? 'if' : '} elseif').' ('.$this->generateCompositeNodeItemCondition($node).') {', $context);
 
                 ++$context['indentation_level'];
-                $php .= $this->generateYields($node, $options, $context)
+                $php .= $this->generateYields($node, $options, ['union_of_collections' => $this->isUnionOfCollections($dataModelNode)] + $context)
                     .$this->flushYieldBuffer($context);
                 --$context['indentation_level'];
             }
@@ -201,7 +205,7 @@ final class PhpGenerator
                     .$this->line("if (\is_array($accessor)) {", $context);
 
                 ++$context['indentation_level'];
-                $php .= $this->yieldEncoded($accessor, $context, $this->shouldForceObject($dataModelNode), true)
+                $php .= $this->yieldEncoded($castToObject ? "\\array_is_list(\$dict = $accessor) ? (object) \$dict : \$dict" : $accessor, $context, $this->shouldForceObject($dataModelNode), true)
                     .$this->flushYieldBuffer($context);
                 --$context['indentation_level'];
 
@@ -525,8 +529,10 @@ final class PhpGenerator
     private function canBeEncodedWithJsonEncode(DataModelNodeInterface $node, int $depth = 0, bool $splitDictLists = true): bool
     {
         if ($node instanceof CompositeNode) {
+            $isUnionOfCollections = $this->isUnionOfCollections($node);
+
             foreach ($node->getNodes() as $n) {
-                if (!$this->canBeEncodedWithJsonEncode($n, $depth, $splitDictLists)) {
+                if ((!$isUnionOfCollections && $this->shouldCastToObject($n)) || !$this->canBeEncodedWithJsonEncode($n, $depth, $splitDictLists && !$isUnionOfCollections)) {
                     return false;
                 }
             }
@@ -560,15 +566,28 @@ final class PhpGenerator
 
         if ($keyType instanceof BuiltinType && TypeIdentifier::INT === $keyType->getTypeIdentifier()) {
             // dicts in a list are encoded one by one, so that "\JSON_FORCE_OBJECT" can be used for each of them
-            if ($splitDictLists && $this->shouldForceObject($node->getItemNode())) {
+            if ($splitDictLists && ($this->shouldForceObject($node->getItemNode()) || $this->shouldCastToObject($node->getItemNode()))) {
                 return false;
             }
         } elseif (!$this->isDict($node)) {
             // keep json_encode() for "int|string" keys, since it writes lists as JSON arrays while the generated loop writes a JSON object
             $splitDictLists = false;
+        } elseif ($depth > 0 && $splitDictLists && $this->shouldCastToObject($node)) {
+            // only a dict encoded on its own can be cast to an object
+            return false;
         }
 
         return $this->canBeEncodedWithJsonEncode($node->getItemNode(), $depth + 1, $splitDictLists);
+    }
+
+    private function shouldCastToObject(DataModelNodeInterface $node): bool
+    {
+        return $node instanceof CollectionNode && $this->isDict($node) && !$this->canBeEncodedAsObject($node);
+    }
+
+    private function isUnionOfCollections(CompositeNode $node): bool
+    {
+        return 1 < \count(array_filter($node->getNodes(), static fn (DataModelNodeInterface $n): bool => $n instanceof CollectionNode));
     }
 
     /**
