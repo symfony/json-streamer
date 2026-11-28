@@ -137,9 +137,6 @@ final class PhpGenerator
 
             $generators = [
                 $node->getIdentifier() => $this->line('$generators['.var_export($node->getIdentifier(), true).'] = static function ($data, $depth) use ($transformers, $options, &$generators) {', $context)
-                    .$this->line('    if ($depth >= '.self::MAX_DEPTH.') {', $context)
-                    .$this->line('        throw new \\'.NotEncodableValueException::class.'(\'Maximum stack depth exceeded\');', $context)
-                    .$this->line('    }', $context)
                     .$yields
                     .$this->line('};', $context),
             ];
@@ -168,8 +165,12 @@ final class PhpGenerator
     {
         $accessor = $dataModelNode->getAccessor();
 
+        // collections in a union cannot be told apart at runtime, so they are encoded as is
+        $castToObject = !($context['union_of_collections'] ?? false) && $this->shouldCastToObject($dataModelNode);
+        unset($context['union_of_collections']);
+
         if ($this->canBeEncodedWithJsonEncode($dataModelNode)) {
-            return $this->yield($this->encode($accessor, $context, $this->shouldForceObject($dataModelNode)), $context);
+            return $this->yieldEncoded($castToObject ? "\\array_is_list(\$dict = $accessor) ? (object) \$dict : \$dict" : $accessor, $context, $this->shouldForceObject($dataModelNode), !$this->isPlainScalar($dataModelNode));
         }
 
         if ($context['depth'] >= self::MAX_DEPTH) {
@@ -194,7 +195,7 @@ final class PhpGenerator
                 $php .= $this->line((0 === $i ? 'if' : '} elseif').' ('.$this->generateCompositeNodeItemCondition($node).') {', $context);
 
                 ++$context['indentation_level'];
-                $php .= $this->generateYields($node, $options, $context)
+                $php .= $this->generateYields($node, $options, ['union_of_collections' => $this->isUnionOfCollections($dataModelNode)] + $context)
                     .$this->flushYieldBuffer($context);
                 --$context['indentation_level'];
             }
@@ -212,7 +213,7 @@ final class PhpGenerator
                     .$this->line("if (\is_array($accessor)) {", $context);
 
                 ++$context['indentation_level'];
-                $php .= $this->yield($this->encode($accessor, $context, $this->shouldForceObject($dataModelNode)), $context)
+                $php .= $this->yieldEncoded($castToObject ? "\\array_is_list(\$dict = $accessor) ? (object) \$dict : \$dict" : $accessor, $context, $this->shouldForceObject($dataModelNode), true)
                     .$this->flushYieldBuffer($context);
                 --$context['indentation_level'];
 
@@ -238,15 +239,15 @@ final class PhpGenerator
             }
 
             if (isset($context['generated_generators'][$dataModelNode->getIdentifier()]) || $dataModelNode->isMock()) {
-                $depthArgument = ($context['generating_generator'] ?? false) ? '$depth + 1' : (string) $context['depth'];
-
                 return $this->flushYieldBuffer($context)
-                    .$this->line('yield from $generators['.var_export($dataModelNode->getIdentifier(), true).']('.$accessor.', '.$depthArgument.');', $context);
+                    .$this->line('yield from $generators['.var_export($dataModelNode->getIdentifier(), true).']('.$accessor.', '.$this->depthExpression($context).');', $context);
             }
+
+            $php = $this->generateRuntimeDepthCheck($context);
 
             ++$context['depth'];
 
-            $php = $this->line('$prefix'.$context['depth'].' = \'\';', $context)
+            $php .= $this->line('$prefix'.$context['depth'].' = \'\';', $context)
                 .$this->yieldInterpolatedString('{', $context);
 
             $prefixIsCommaForSure = false;
@@ -329,9 +330,64 @@ final class PhpGenerator
     /**
      * @param array<string, mixed> $context
      */
-    private function encode(string $value, array $context, bool $forceObject = false): string
+    private function encode(string $value, array $context, bool $forceObject = false, ?string $maxDepth = null): string
     {
-        return "\json_encode($value, ".self::THROWING_JSON_ENCODE_FLAGS_EXPRESSION.($forceObject ? ' | \\JSON_FORCE_OBJECT' : '').', '.(self::MAX_DEPTH - $context['depth']).')';
+        $maxDepth ??= (string) (self::MAX_DEPTH - $context['depth']);
+
+        return "\json_encode($value, ".self::THROWING_JSON_ENCODE_FLAGS_EXPRESSION.($forceObject ? ' | \\JSON_FORCE_OBJECT' : '').", $maxDepth)";
+    }
+
+    /**
+     * @param array<string, mixed> $context
+     */
+    private function yieldEncoded(string $value, array $context, bool $forceObject, bool $mayBeContainer): string
+    {
+        if (!$mayBeContainer || !($context['generating_generator'] ?? false)) {
+            return $this->yield($this->encode($value, $context, $forceObject), $context);
+        }
+
+        $maxDepth = self::MAX_DEPTH - $context['depth'];
+
+        return $this->line('$encoded = '.$this->encode($value, $context, $forceObject, "\\max(1, $maxDepth - \$depth)").';', $context)
+            .$this->generateMaxDepthCheck("\$depth >= $maxDepth && ('[' === \$encoded[0] || '{' === \$encoded[0])", $context)
+            .$this->yield('$encoded', $context)
+            .$this->line('unset($encoded);', $context);
+    }
+
+    /**
+     * @param array<string, mixed> $context
+     */
+    private function generateRuntimeDepthCheck(array $context): string
+    {
+        if (!($context['generating_generator'] ?? false)) {
+            return '';
+        }
+
+        return $this->generateMaxDepthCheck($this->depthExpression($context).' >= '.self::MAX_DEPTH, $context);
+    }
+
+    /**
+     * @param array<string, mixed> $context
+     */
+    private function generateMaxDepthCheck(string $condition, array $context): string
+    {
+        return $this->line("if ($condition) {", $context)
+            .$this->line('    throw new \\'.NotEncodableValueException::class.'(\'Maximum stack depth exceeded\');', $context)
+            .$this->line('}', $context);
+    }
+
+    /**
+     * Object generators receive the depth at which they are called, the context depth being relative to it.
+     *
+     * @param array<string, mixed> $context
+     */
+    private function depthExpression(array $context): string
+    {
+        if (!($context['generating_generator'] ?? false)) {
+            return (string) $context['depth'];
+        }
+
+        return 0 === $context['depth'] ? '$depth' : '$depth + '.$context['depth'];
     }
 
     /**
@@ -411,12 +467,13 @@ final class PhpGenerator
     private function generateCollectionLoop(CollectionNode $dataModelNode, array $options, array $context): string
     {
         $accessor = $dataModelNode->getAccessor();
+        $php = $this->generateRuntimeDepthCheck($context);
         ++$context['depth'];
 
         $collectionKeyType = $dataModelNode->getType()->getCollectionKeyType();
 
         if ($collectionKeyType instanceof BuiltinType && TypeIdentifier::INT === $collectionKeyType->getTypeIdentifier()) {
-            $php = $this->yieldInterpolatedString('[', $context)
+            $php .= $this->yieldInterpolatedString('[', $context)
                 .$this->flushYieldBuffer($context)
                 .$this->line('$prefix'.$context['depth'].' = \'\';', $context)
                 .$this->line("foreach ($accessor as ".$dataModelNode->getItemNode()->getAccessor().') {', $context);
@@ -438,7 +495,7 @@ final class PhpGenerator
 
         $escapedKey = "$keyAccessor = is_int($keyAccessor) ? $keyAccessor : \substr(\json_encode($keyAccessor, ".self::THROWING_JSON_ENCODE_FLAGS_EXPRESSION.'), 1, -1);';
 
-        $php = $this->yieldInterpolatedString('{', $context)
+        $php .= $this->yieldInterpolatedString('{', $context)
             .$this->flushYieldBuffer($context)
             .$this->line('$prefix'.$context['depth'].' = \'\';', $context)
             .$this->line("foreach ($accessor as $keyAccessor => ".$dataModelNode->getItemNode()->getAccessor().') {', $context);
@@ -457,14 +514,31 @@ final class PhpGenerator
             .$this->yieldInterpolatedString('}', $context);
     }
 
+    private function isPlainScalar(DataModelNodeInterface $node): bool
+    {
+        if ($node instanceof CompositeNode) {
+            foreach ($node->getNodes() as $n) {
+                if (!$this->isPlainScalar($n)) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        return $node instanceof ScalarNode && $node->getType()->isIdentifiedBy(TypeIdentifier::INT, TypeIdentifier::FLOAT, TypeIdentifier::STRING, TypeIdentifier::BOOL, TypeIdentifier::TRUE, TypeIdentifier::FALSE, TypeIdentifier::NULL);
+    }
+
     /**
      * Determines if the $node can be encoded using a simple "json_encode".
      */
     private function canBeEncodedWithJsonEncode(DataModelNodeInterface $node, int $depth = 0, bool $splitDictLists = true): bool
     {
         if ($node instanceof CompositeNode) {
+            $isUnionOfCollections = $this->isUnionOfCollections($node);
+
             foreach ($node->getNodes() as $n) {
-                if (!$this->canBeEncodedWithJsonEncode($n, $depth, $splitDictLists)) {
+                if ((!$isUnionOfCollections && $this->shouldCastToObject($n)) || !$this->canBeEncodedWithJsonEncode($n, $depth, $splitDictLists && !$isUnionOfCollections)) {
                     return false;
                 }
             }
@@ -498,15 +572,28 @@ final class PhpGenerator
 
         if ($keyType instanceof BuiltinType && TypeIdentifier::INT === $keyType->getTypeIdentifier()) {
             // dicts in a list are encoded one by one, so that "\JSON_FORCE_OBJECT" can be used for each of them
-            if ($splitDictLists && $this->shouldForceObject($node->getItemNode())) {
+            if ($splitDictLists && ($this->shouldForceObject($node->getItemNode()) || $this->shouldCastToObject($node->getItemNode()))) {
                 return false;
             }
         } elseif (!$this->isDict($node)) {
             // keep json_encode() for "int|string" keys, since it writes lists as JSON arrays while the generated loop writes a JSON object
             $splitDictLists = false;
+        } elseif ($depth > 0 && $splitDictLists && $this->shouldCastToObject($node)) {
+            // only a dict encoded on its own can be cast to an object
+            return false;
         }
 
         return $this->canBeEncodedWithJsonEncode($node->getItemNode(), $depth + 1, $splitDictLists);
+    }
+
+    private function shouldCastToObject(DataModelNodeInterface $node): bool
+    {
+        return $node instanceof CollectionNode && $this->isDict($node) && !$this->canBeEncodedAsObject($node);
+    }
+
+    private function isUnionOfCollections(CompositeNode $node): bool
+    {
+        return 1 < \count(array_filter($node->getNodes(), static fn (DataModelNodeInterface $n): bool => $n instanceof CollectionNode));
     }
 
     /**

@@ -18,13 +18,17 @@ use Symfony\Component\JsonStreamer\Exception\NotEncodableValueException;
 use Symfony\Component\JsonStreamer\JsonStreamReader;
 use Symfony\Component\JsonStreamer\JsonStreamWriter;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Enum\DummyBackedEnum;
+use Symfony\Component\JsonStreamer\Tests\Fixtures\Enum\DummyBackedEnumWithInterface;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Mapping\SyntheticPropertyMetadataLoader;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\ClassicDummy;
+use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\ClassicDummyChild;
+use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyInterface;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithArray;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithConcreteInheritedGenerics;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithDateIntervals;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithDateTimes;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithDateTimeZones;
+use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithDictValueTransformer;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithDollarNamedProperties;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithGenerics;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithList;
@@ -50,6 +54,7 @@ use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\DummyWithVirtualProperti
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\SelfReferencingDummy;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\SelfReferencingDummyDict;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\SelfReferencingDummyList;
+use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\SelfReferencingDummyWithCollections;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Model\SelfReferencingDummyWithOtherDummy;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Transformer\BooleanToStringValueTransformer;
 use Symfony\Component\JsonStreamer\Tests\Fixtures\Transformer\DoubleIntAndCastToStringValueTransformer;
@@ -147,9 +152,39 @@ class JsonStreamWriterTest extends TestCase
     {
         $this->assertWritten('{"a":[1,2],"b":[]}', ['a' => [1, 2], 'b' => []], Type::dict(Type::list(Type::int())));
         $this->assertWritten('{"a":[1,2],"b":[]}', ['a' => [1, 2], 'b' => []], Type::dict());
-        $this->assertWritten('[{"a":1},[]]', [['a' => 1], []], Type::list(Type::dict()));
+        $this->assertWritten('[{"a":1},{}]', [['a' => 1], []], Type::list(Type::dict()));
         $this->assertWritten('[{"a":1}]', [['a' => 1]], Type::array(Type::dict(Type::int())));
         $this->assertWritten('[[{"a":1}]]', [[['a' => 1]]], Type::array(Type::list(Type::dict(Type::int()))));
+    }
+
+    public function testWriteEmptyOrNumericKeyedDictionaryOfCollectionsOrMixedValuesAsObject()
+    {
+        $this->assertWritten('{}', [], Type::dict(Type::list(Type::int())));
+        $this->assertWritten('{"0":[1],"1":[]}', ['0' => [1], '1' => []], Type::dict(Type::list(Type::int())));
+        $this->assertWritten('{}', [], Type::dict());
+        $this->assertWritten('{"0":1,"1":[2]}', ['0' => 1, '1' => [2]], Type::dict());
+        $this->assertWritten('{"a":{},"b":{"0":[1]}}', ['a' => [], 'b' => ['0' => [1]]], Type::dict(Type::dict(Type::list(Type::int()))));
+        $this->assertWritten('{}', [], Type::nullable(Type::dict(Type::list(Type::int()))));
+        $this->assertWritten('{}', [], Type::union(Type::dict(), Type::string()));
+        $this->assertWritten('[{},null,{"0":1}]', [[], null, ['0' => 1]], Type::list(Type::nullable(Type::dict())));
+        $this->assertWritten('{}', [], Type::iterable(Type::list(Type::int()), Type::string()));
+        $this->assertWritten('{"\u0000a":1}', ["\0a" => 1], Type::dict());
+    }
+
+    public function testWriteUnionOfListAndDictionaryOfMixedValues()
+    {
+        $this->assertWritten('[1,2]', [1, 2], Type::union(Type::list(Type::int()), Type::dict()));
+        $this->assertWritten('{"a":1}', ['a' => 1], Type::union(Type::list(Type::int()), Type::dict()));
+        $this->assertWritten('[1,2]', [1, 2], Type::nullable(Type::union(Type::list(Type::int()), Type::dict(Type::list(Type::int())))));
+        $this->assertWritten('[1,2]', [1, 2], Type::union(Type::list(Type::int()), Type::dict(Type::list(Type::dict()))));
+    }
+
+    public function testWriteDictionaryOfMixedValuesFromValueTransformerOnce()
+    {
+        DummyWithDictValueTransformer::$calls = 0;
+
+        $this->assertWritten('{"id":{"0":1}}', new DummyWithDictValueTransformer(), Type::object(DummyWithDictValueTransformer::class));
+        $this->assertSame(1, DummyWithDictValueTransformer::$calls);
     }
 
     public function testWrittenEmptyDictionaryCanBeReadFromStream()
@@ -192,6 +227,23 @@ class JsonStreamWriterTest extends TestCase
 
         $dummy->value = null;
         $this->assertWritten('{}', $dummy, Type::object(DummyWithUnionProperties::class));
+    }
+
+    public function testWriteUnionOfClassAndSubclass()
+    {
+        $type = Type::union(Type::object(ClassicDummy::class), Type::object(ClassicDummyChild::class), Type::int());
+
+        $this->assertWritten('{"child":true,"id":1,"name":"dummy"}', new ClassicDummyChild(), $type);
+        $this->assertWritten('{"id":1,"name":"dummy"}', new ClassicDummy(), $type);
+        $this->assertWritten('1', 1, $type);
+    }
+
+    public function testWriteUnionOfInterfaceAndImplementations()
+    {
+        $type = Type::union(Type::object(DummyInterface::class), Type::object(ClassicDummyChild::class), Type::enum(DummyBackedEnumWithInterface::class));
+
+        $this->assertWritten('{"child":true,"id":1,"name":"dummy"}', new ClassicDummyChild(), $type);
+        $this->assertWritten('"one"', DummyBackedEnumWithInterface::ONE, $type);
     }
 
     public function testWriteCollection()
@@ -673,6 +725,65 @@ class JsonStreamWriterTest extends TestCase
         );
     }
 
+    public function testWriteSelfReferencingObjectWithConsecutiveContainerValues()
+    {
+        $dummy = new SelfReferencingDummyWithCollections();
+        $dummy->mixed = [1];
+        $dummy->otherMixed = ['k' => 2];
+        $dummy->self = new SelfReferencingDummyWithCollections();
+        $dummy->self->mixed = [3];
+        $dummy->self->otherMixed = ['k' => 4];
+
+        $this->assertWritten(
+            '{"self":{"mixed":[3],"otherMixed":{"k":4}},"mixed":[1],"otherMixed":{"k":2}}',
+            $dummy,
+            Type::object(SelfReferencingDummyWithCollections::class),
+        );
+    }
+
+    public function testWriteNestedSelfListAtMaxDepth()
+    {
+        $dummy = new SelfReferencingDummyList();
+        for ($i = 0; $i < 255; ++$i) {
+            $tmp = new SelfReferencingDummyList();
+            $tmp->items = [$dummy];
+            $dummy = $tmp;
+        }
+
+        $this->assertWritten(
+            str_repeat('{"items":{"0":', 255).'{"items":{}}'.str_repeat('}}', 255),
+            $dummy,
+            Type::object(SelfReferencingDummyList::class),
+        );
+    }
+
+    #[DataProvider('writeSelfReferencingDummyWithCollectionsAtMaxDepthDataProvider')]
+    public function testWriteSelfReferencingDummyWithCollectionsAtMaxDepth(SelfReferencingDummyWithCollections $data)
+    {
+        $writer = JsonStreamWriter::create([], $this->streamWritersDir);
+        $json = (string) $writer->write($data, Type::object(SelfReferencingDummyWithCollections::class));
+
+        $depth = $maxDepth = 0;
+        foreach (str_split($json) as $char) {
+            match ($char) {
+                '{', '[' => $maxDepth = max($maxDepth, ++$depth),
+                '}', ']' => --$depth,
+                default => null,
+            };
+        }
+
+        $this->assertSame(512, $maxDepth);
+    }
+
+    /**
+     * @return iterable<string, array{0: SelfReferencingDummyWithCollections}>
+     */
+    public static function writeSelfReferencingDummyWithCollectionsAtMaxDepthDataProvider(): iterable
+    {
+        yield from self::selfReferencingDummiesWithCollections(512);
+        yield 'scalar in mixed' => [self::selfReferencingDummyWithCollectionsChain(512, static fn ($d) => $d->mixed = 1)];
+    }
+
     #[DataProvider('throwWhenMaxDepthIsReachedDataProvider')]
     public function testThrowWhenMaxDepthIsReached(Type $type, mixed $data)
     {
@@ -707,6 +818,28 @@ class JsonStreamWriterTest extends TestCase
 
         yield [Type::list(Type::object(SelfReferencingDummy::class)), [$dummy]];
         yield [Type::dict(Type::object(SelfReferencingDummy::class)), ['k' => $dummy]];
+
+        $dummy = new SelfReferencingDummyList();
+        for ($i = 0; $i < 256; ++$i) {
+            $tmp = new SelfReferencingDummyList();
+            $tmp->items = [$dummy];
+            $dummy = $tmp;
+        }
+
+        yield [Type::object(SelfReferencingDummyList::class), $dummy];
+
+        $dummy = new SelfReferencingDummyDict();
+        for ($i = 0; $i < 256; ++$i) {
+            $tmp = new SelfReferencingDummyDict();
+            $tmp->items = ['k' => $dummy];
+            $dummy = $tmp;
+        }
+
+        yield [Type::object(SelfReferencingDummyDict::class), $dummy];
+
+        foreach (self::selfReferencingDummiesWithCollections(513) as [$dummy]) {
+            yield [Type::object(SelfReferencingDummyWithCollections::class), $dummy];
+        }
     }
 
     public function testThrowWhenEncodeError()
@@ -815,5 +948,34 @@ class JsonStreamWriterTest extends TestCase
     {
         $writer = JsonStreamWriter::create($transformers, $this->streamWritersDir);
         $this->assertSame($json, (string) $writer->write($data, $type, $options));
+    }
+
+    /**
+     * @return iterable<string, array{0: SelfReferencingDummyWithCollections}>
+     */
+    private static function selfReferencingDummiesWithCollections(int $depth): iterable
+    {
+        $dict = 1;
+        for ($i = 0; $i < 256; ++$i) {
+            $dict = ['k' => $dict];
+        }
+
+        yield 'json_encode() collection' => [self::selfReferencingDummyWithCollectionsChain($depth - 256, static fn ($d) => $d->dict = $dict)];
+        yield 'container in mixed' => [self::selfReferencingDummyWithCollectionsChain($depth - 1, static fn ($d) => $d->mixed = [1])];
+        yield 'looped collection' => [self::selfReferencingDummyWithCollectionsChain($depth - 2, static fn ($d) => $d->listOfDicts = [['k' => 1]])];
+        yield 'empty looped collection' => [self::selfReferencingDummyWithCollectionsChain($depth - 1, static fn ($d) => $d->listOfDicts = [])];
+        yield 'inlined object' => [self::selfReferencingDummyWithCollectionsChain($depth - 3, static fn ($d) => $d->listsOfObjects = [[new ClassicDummy()]])];
+    }
+
+    private static function selfReferencingDummyWithCollectionsChain(int $length, \Closure $fillInnermost): SelfReferencingDummyWithCollections
+    {
+        $fillInnermost($dummy = new SelfReferencingDummyWithCollections());
+        for ($i = 1; $i < $length; ++$i) {
+            $tmp = new SelfReferencingDummyWithCollections();
+            $tmp->self = $dummy;
+            $dummy = $tmp;
+        }
+
+        return $dummy;
     }
 }
