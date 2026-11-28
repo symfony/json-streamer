@@ -39,7 +39,7 @@ return static function (mixed $data, \Psr\Container\ContainerInterface $valueTra
         }
         if (null !== $data->dict) {
             yield "{$prefix1}\"dict\":";
-            $encoded = \json_encode($data->dict, \JSON_THROW_ON_ERROR | \JSON_PRESERVE_ZERO_FRACTION | \JSON_UNESCAPED_SLASHES | \JSON_UNESCAPED_UNICODE, \max(1, 511 - $depth));
+            $encoded = \json_encode(\array_is_list($dict = $data->dict) ? (object) $dict : $dict, \JSON_THROW_ON_ERROR | \JSON_PRESERVE_ZERO_FRACTION | \JSON_UNESCAPED_SLASHES | \JSON_UNESCAPED_UNICODE, \max(1, 511 - $depth));
             if ($depth >= 511 && ('[' === $encoded[0] || '{' === $encoded[0])) {
                 throw new \Symfony\Component\JsonStreamer\Exception\NotEncodableValueException('Maximum stack depth exceeded');
             }
